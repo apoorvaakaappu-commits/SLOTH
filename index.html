@@ -1,109 +1,81 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
-<title>SLOTH</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🦥 SLOTH PRO Offline Embedded Lab</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
 body{
-margin:0;
-font-family:Arial;
-background:#0a0a0a;
+background:#0b0b0b;
 color:#00ffa6;
-display:flex;
-height:100vh;
-}
-
-/* SIDEBAR */
-
-#sidebar{
-width:250px;
-background:#050505;
-border-right:1px solid #00ffa6;
-overflow:auto;
-}
-
-.tool{
-padding:14px;
-cursor:pointer;
-border-bottom:1px solid #002a1f;
-}
-
-.tool:hover{
-background:#002a1f;
-}
-
-/* MAIN */
-
-#main{
-flex:1;
-display:flex;
-flex-direction:column;
+font-family:Segoe UI,monospace;
+margin:0;
 }
 
 header{
-padding:12px;
+text-align:center;
+font-size:30px;
+padding:20px;
 border-bottom:1px solid #00ffa6;
 }
 
-.workspace{
-flex:1;
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
 padding:20px;
-overflow:auto;
 }
 
 .panel{
-display:none;
-}
-
-.active{
-display:block;
-}
-
-input,textarea,select{
-
-width:100%;
 background:#111;
+padding:15px;
+border-radius:10px;
+border:1px solid #00ffa6;
+}
+
+textarea{
+width:100%;
+height:130px;
+background:black;
 color:#00ffa6;
 border:1px solid #00ffa6;
-padding:8px;
-margin-top:8px;
+}
 
+select,input{
+width:100%;
+background:black;
+color:#00ffa6;
+border:1px solid #00ffa6;
+margin-bottom:6px;
 }
 
 button{
-
 background:#00ffa6;
 border:none;
 padding:8px;
-margin-top:10px;
+margin-top:5px;
 cursor:pointer;
+}
 
+.toolbox{
+display:flex;
+gap:10px;
+margin-bottom:10px;
 }
 
 .component{
-
 border:1px solid #00ffa6;
 padding:6px;
-margin:4px;
-display:inline-block;
 cursor:grab;
-
 }
 
-#canvas{
-
-background:#111;
-height:420px;
+canvas{
+background:#080808;
 border:1px solid #00ffa6;
-position:relative;
-margin-top:10px;
-
 }
 
 </style>
@@ -112,211 +84,91 @@ margin-top:10px;
 
 <body>
 
-<div id="sidebar">
+<header>🦥 SLOTH PRO Offline Embedded Lab</header>
 
-<div class="tool" onclick="openPanel('firmware')">🤖 Firmware Generator</div>
-<div class="tool" onclick="openPanel('editor')">💻 Code Editor</div>
-<div class="tool" onclick="openPanel('circuit')">🔧 Circuit Builder</div>
-<div class="tool" onclick="openPanel('scope')">📡 Oscilloscope</div>
-<div class="tool" onclick="openPanel('calc')">📐 EEE Calculators</div>
+<div class="grid">
 
-</div>
+<div class="panel">
 
-<div id="main">
+<h3>⚙ Firmware Generator</h3>
 
-<header>
-
-<h2>🦥 SLOTH Embedded Engineering Lab</h2>
-
-<input id="apikey" placeholder="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">
-
-</header>
-
-<div class="workspace">
-
-<!-- FIRMWARE -->
-
-<div id="firmware" class="panel active">
-
-<h3>Firmware Generator</h3>
-
-<label>Microcontroller</label>
-
-<select id="mc">
+<select id="board">
 
 <option>Arduino Uno</option>
-<option>Arduino Mega</option>
 <option>ESP32</option>
-<option>ESP8266</option>
 <option>Raspberry Pi Pico</option>
 <option>STM32</option>
-<option>ATtiny85</option>
-<option>PIC16F877A</option>
 
 </select>
-
-<label>Programming Language</label>
 
 <select id="lang">
 
 <option>C</option>
 <option>C++</option>
-<option>Arduino</option>
-<option>Embedded C</option>
 <option>MicroPython</option>
 
 </select>
 
-<label>Components Used</label>
+<select id="template">
 
-<select id="components" multiple size="6">
-
-<option>LED</option>
-<option>Button</option>
-<option>Servo Motor</option>
-<option>DC Motor</option>
-<option>Ultrasonic Sensor</option>
-<option>Temperature Sensor</option>
-<option>LDR</option>
-<option>Relay</option>
-<option>Buzzer</option>
-<option>LCD Display</option>
-<option>OLED Display</option>
-<option>IR Sensor</option>
+<option>Blink LED</option>
+<option>Button LED Control</option>
+<option>PWM LED Fade</option>
 
 </select>
 
-<label>Desired Function</label>
+<button onclick="generate()">Generate Firmware</button>
 
-<textarea id="function" rows="5"
-placeholder="Example: Turn on LED when button pressed and show message on LCD"></textarea>
+<textarea id="editor"></textarea>
 
-<button onclick="generateFirmware()">Generate Firmware</button>
-
-<textarea id="firmwareCode" rows="16"></textarea>
+<button onclick="explain()">Explain Code</button>
 
 </div>
 
-<!-- CODE EDITOR -->
+<div class="panel">
 
-<div id="editor" class="panel">
+<h3>🔧 Circuit Builder</h3>
 
-<h3>Code Editor</h3>
+<div class="toolbox">
 
-<textarea rows="20" placeholder="Write or edit embedded code here"></textarea>
-
-</div>
-
-<!-- CIRCUIT BUILDER -->
-
-<div id="circuit" class="panel">
-
-<h3>Circuit Builder</h3>
-
-<h4>Passive Components</h4>
-
-<div class="component" draggable="true">Resistor</div>
-<div class="component" draggable="true">Capacitor</div>
-<div class="component" draggable="true">Inductor</div>
-
-<h4>Diodes</h4>
-
-<div class="component" draggable="true">LED</div>
-<div class="component" draggable="true">Diode</div>
-<div class="component" draggable="true">Zener</div>
-
-<h4>Transistors</h4>
-
-<div class="component" draggable="true">NPN</div>
-<div class="component" draggable="true">PNP</div>
-<div class="component" draggable="true">MOSFET</div>
-
-<h4>Sources</h4>
-
-<div class="component" draggable="true">Battery</div>
-<div class="component" draggable="true">AC Source</div>
-<div class="component" draggable="true">DC Supply</div>
-
-<h4>Sensors</h4>
-
-<div class="component" draggable="true">Temperature Sensor</div>
-<div class="component" draggable="true">LDR</div>
-<div class="component" draggable="true">Ultrasonic</div>
-
-<h4>Microcontrollers</h4>
-
-<div class="component" draggable="true">Arduino</div>
-<div class="component" draggable="true">ESP32</div>
-<div class="component" draggable="true">Raspberry Pi Pico</div>
-
-<div id="canvas"></div>
+<div class="component" draggable="true" data-type="led">💡 LED</div>
+<div class="component" draggable="true" data-type="resistor">📏 Resistor</div>
+<div class="component" draggable="true" data-type="button">🔘 Button</div>
+<div class="component" draggable="true" data-type="battery">🔋 Battery</div>
+<div class="component" draggable="true" data-type="wire">⚡ Wire</div>
 
 </div>
 
-<!-- OSCILLOSCOPE -->
+<canvas id="boardCanvas" width="500" height="250"></canvas>
 
-<div id="scope" class="panel">
-
-<h3>Oscilloscope</h3>
-
-<input id="waveInput" placeholder="Example: 0,1,2,1,0,-1,-2,-1">
-
-<button onclick="plotWave()">Plot Waveform</button>
-
-<canvas id="chart"></canvas>
+<button onclick="simulate()">Run Simulation</button>
 
 </div>
 
-<!-- CALCULATORS -->
+<div class="panel">
 
-<div id="calc" class="panel">
+<h3>📡 Oscilloscope</h3>
 
-<h3>EEE Calculators</h3>
+<canvas id="scope"></canvas>
 
-<h4>Ohm's Law</h4>
-
-<input id="v" placeholder="Voltage">
-<input id="r" placeholder="Resistance">
-
-<button onclick="ohm()">Calculate</button>
-
-<p id="ohmRes"></p>
-
-<h4>Series Resistors</h4>
-
-<input id="series" placeholder="100,220,330">
-
-<button onclick="seriesCalc()">Calculate</button>
-
-<p id="seriesRes"></p>
-
-<h4>Parallel Resistors</h4>
-
-<input id="parallel" placeholder="100,220,330">
-
-<button onclick="parallelCalc()">Calculate</button>
-
-<p id="parallelRes"></p>
-
-<h4>Capacitive Reactance</h4>
-
-<input id="freqC" placeholder="Frequency">
-<input id="cap" placeholder="Capacitance">
-
-<button onclick="capacitive()">Calculate</button>
-
-<p id="capRes"></p>
-
-<h4>Inductive Reactance</h4>
-
-<input id="freqL" placeholder="Frequency">
-<input id="ind" placeholder="Inductance">
-
-<button onclick="inductive()">Calculate</button>
-
-<p id="indRes"></p>
+<button onclick="sine()">Sine</button>
+<button onclick="square()">Square</button>
 
 </div>
+
+<div class="panel">
+
+<h3>📐 EEE Calculator</h3>
+
+<input id="V" placeholder="Voltage">
+
+<input id="I" placeholder="Current">
+
+<input id="R" placeholder="Resistance">
+
+<button onclick="ohm()">Ohm Law</button>
+
+<div id="result"></div>
 
 </div>
 
@@ -324,192 +176,223 @@ placeholder="Example: Turn on LED when button pressed and show message on LCD"><
 
 <script>
 
-/* PANEL SWITCH */
+/* Firmware Generator */
 
-function openPanel(id){
+function generate(){
 
-document.querySelectorAll(".panel")
-.forEach(p=>p.classList.remove("active"))
-
-document.getElementById(id).classList.add("active")
-
-}
-
-/* AI FIRMWARE GENERATOR */
-
-async function generateFirmware(){
-
-let key=document.getElementById("apikey").value
-
-if(!key){
-
-alert("Insert OpenAI API key")
-
-return
-
-}
-
-let mc=document.getElementById("mc").value
+let board=document.getElementById("board").value
 let lang=document.getElementById("lang").value
+let template=document.getElementById("template").value
 
-let comps=[...document.getElementById("components").selectedOptions]
-.map(o=>o.value)
+let code=""
 
-let func=document.getElementById("function").value
+/* Blink */
 
-let prompt=`
+if(template=="Blink LED"){
 
-Generate COMPLETE working firmware.
+code=`// ${board} Blink LED
 
-Microcontroller: ${mc}
-Programming Language: ${lang}
+void setup(){
+pinMode(13,OUTPUT);
+}
 
-Components:
-${comps.join(", ")}
-
-Function:
-${func}
-
-Requirements:
-- include libraries
-- pin definitions
-- setup and loop
-- comments explaining code
-- wiring instructions
-
-`
-
-let r=await fetch("https://api.openai.com/v1/chat/completions",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer "+key
-},
-
-body:JSON.stringify({
-
-model:"gpt-4o-mini",
-
-messages:[
-{role:"user",content:prompt}
-]
-
-})
-
-})
-
-let data=await r.json()
-
-document.getElementById("firmwareCode").value=data.choices[0].message.content
+void loop(){
+digitalWrite(13,HIGH);
+delay(1000);
+digitalWrite(13,LOW);
+delay(1000);
+}`
 
 }
 
-/* CIRCUIT BUILDER */
+/* Button */
 
-let canvas=document.getElementById("canvas")
+if(template=="Button LED Control"){
 
-document.querySelectorAll(".component").forEach(el=>{
+code=`int button=2;
+int led=13;
 
-el.addEventListener("dragstart",e=>{
+void setup(){
+pinMode(button,INPUT);
+pinMode(led,OUTPUT);
+}
 
-e.dataTransfer.setData("text",e.target.innerText)
+void loop(){
 
+if(digitalRead(button)==HIGH)
+digitalWrite(led,HIGH);
+
+else
+digitalWrite(led,LOW);
+
+}`
+
+}
+
+/* PWM */
+
+if(template=="PWM LED Fade"){
+
+code=`int led=9;
+
+void setup(){
+pinMode(led,OUTPUT);
+}
+
+void loop(){
+
+for(int i=0;i<255;i++){
+analogWrite(led,i);
+delay(10);
+}
+
+for(int i=255;i>0;i--){
+analogWrite(led,i);
+delay(10);
+}
+
+}`
+
+}
+
+document.getElementById("editor").value=code
+
+}
+
+function explain(){
+
+alert("This firmware configures microcontroller pins and controls output signals using loops and digital instructions.")
+
+}
+
+/* Circuit Builder */
+
+const canvas=document.getElementById("boardCanvas")
+const ctx=canvas.getContext("2d")
+
+const parts=[]
+
+document.querySelectorAll(".component").forEach(c=>{
+c.addEventListener("dragstart",e=>{
+e.dataTransfer.setData("type",c.dataset.type)
 })
-
 })
 
 canvas.addEventListener("dragover",e=>e.preventDefault())
 
 canvas.addEventListener("drop",e=>{
 
-e.preventDefault()
+const type=e.dataTransfer.getData("type")
 
-let d=document.createElement("div")
+parts.push({
+type:type,
+x:e.offsetX,
+y:e.offsetY
+})
 
-d.innerText=e.dataTransfer.getData("text")
-
-d.style.position="absolute"
-d.style.left=e.offsetX+"px"
-d.style.top=e.offsetY+"px"
-
-canvas.appendChild(d)
+draw()
 
 })
 
-/* OSCILLOSCOPE */
+function draw(){
 
-function plotWave(){
+ctx.clearRect(0,0,canvas.width,canvas.height)
 
-let values=document.getElementById("waveInput").value
-.split(",").map(Number)
+parts.forEach(p=>{
 
-new Chart(document.getElementById("chart"),{
+ctx.fillStyle="#00ffa6"
 
+if(p.type=="led"){
+ctx.beginPath()
+ctx.arc(p.x,p.y,8,0,Math.PI*2)
+ctx.fill()
+}
+
+if(p.type=="resistor"){
+ctx.strokeStyle="#00ffa6"
+ctx.strokeRect(p.x-10,p.y-3,20,6)
+}
+
+if(p.type=="button"){
+ctx.beginPath()
+ctx.arc(p.x,p.y,8,0,Math.PI*2)
+ctx.stroke()
+}
+
+if(p.type=="battery"){
+ctx.fillRect(p.x-5,p.y-10,10,20)
+}
+
+if(p.type=="wire"){
+ctx.strokeStyle="red"
+ctx.beginPath()
+ctx.moveTo(p.x,p.y)
+ctx.lineTo(p.x+20,p.y)
+ctx.stroke()
+}
+
+})
+
+}
+
+function simulate(){
+
+ctx.fillStyle="#00ff00"
+
+ctx.beginPath()
+ctx.arc(250,120,40,0,Math.PI*2)
+
+ctx.fill()
+
+}
+
+/* Oscilloscope */
+
+function sine(){
+
+const ctx2=document.getElementById("scope")
+
+let data=[]
+
+for(let i=0;i<100;i++)
+data.push(Math.sin(i/10))
+
+new Chart(ctx2,{
 type:"line",
-
-data:{
-labels:values.map((_,i)=>i),
-datasets:[{data:values}]
-}
-
+data:{labels:data.map((_,i)=>i),datasets:[{label:"Sine",data:data}]}
 })
 
 }
 
-/* CALCULATORS */
+function square(){
+
+const ctx2=document.getElementById("scope")
+
+let data=[]
+
+for(let i=0;i<100;i++)
+data.push(i%20<10?1:-1)
+
+new Chart(ctx2,{
+type:"line",
+data:{labels:data.map((_,i)=>i),datasets:[{label:"Square",data:data}]}
+})
+
+}
+
+/* Calculator */
 
 function ohm(){
 
-let v=document.getElementById("v").value
-let r=document.getElementById("r").value
+let V=parseFloat(document.getElementById("V").value)
+let I=parseFloat(document.getElementById("I").value)
+let R=parseFloat(document.getElementById("R").value)
 
-document.getElementById("ohmRes").innerText="Current = "+(v/r)+" A"
+if(!R)R=V/I
+if(!I)I=V/R
+if(!V)V=I*R
 
-}
-
-function seriesCalc(){
-
-let s=document.getElementById("series").value.split(",").map(Number)
-
-let t=s.reduce((a,b)=>a+b,0)
-
-document.getElementById("seriesRes").innerText=t+" Ω"
-
-}
-
-function parallelCalc(){
-
-let s=document.getElementById("parallel").value.split(",").map(Number)
-
-let inv=0
-
-s.forEach(x=>inv+=1/x)
-
-document.getElementById("parallelRes").innerText=(1/inv)+" Ω"
-
-}
-
-function capacitive(){
-
-let f=document.getElementById("freqC").value
-let c=document.getElementById("cap").value
-
-let xc=1/(2*Math.PI*f*c)
-
-document.getElementById("capRes").innerText="Xc = "+xc+" Ω"
-
-}
-
-function inductive(){
-
-let f=document.getElementById("freqL").value
-let l=document.getElementById("ind").value
-
-let xl=2*Math.PI*f*l
-
-document.getElementById("indRes").innerText="Xl = "+xl+" Ω"
+document.getElementById("result").innerText="V="+V+" I="+I+" R="+R
 
 }
 
