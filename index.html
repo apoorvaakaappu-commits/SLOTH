@@ -2,9 +2,9 @@
 <html>
 <head>
 
-<meta charset="UTF-8">
 <title>SLOTH</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -13,46 +13,48 @@
 body{
 background:#0a0a0a;
 color:#00ff9c;
-font-family:monospace;
+font-family:Arial;
 margin:0;
 }
 
 header{
+padding:15px;
 text-align:center;
-padding:20px;
 border-bottom:1px solid #00ff9c;
 }
 
-.container{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:20px;
+.tabs{
+display:flex;
+flex-wrap:wrap;
+border-bottom:1px solid #00ff9c;
+}
+
+.tab{
+padding:12px;
+cursor:pointer;
+border-right:1px solid #00ff9c;
+}
+
+.tab:hover{
+background:#002a1f;
+}
+
+.panel{
+display:none;
 padding:20px;
 }
 
-section{
-border:1px solid #00ff9c;
-padding:15px;
-border-radius:10px;
-box-shadow:0 0 10px #00ff9c;
+.active{
+display:block;
 }
 
-textarea{
+textarea,input,select{
 width:100%;
-height:150px;
 background:#111;
 color:#00ff9c;
 border:1px solid #00ff9c;
 padding:10px;
-}
-
-input,select{
-width:100%;
-padding:8px;
-background:#111;
-color:#00ff9c;
-border:1px solid #00ff9c;
-margin-top:5px;
+margin-top:10px;
 }
 
 button{
@@ -63,35 +65,19 @@ border:none;
 cursor:pointer;
 }
 
-.components{
-display:flex;
-gap:10px;
-margin-top:10px;
-}
-
-.components div{
-border:1px solid #00ff9c;
-padding:8px;
-cursor:grab;
-}
-
 #canvas{
-border:2px dashed #00ff9c;
-height:200px;
-display:flex;
-flex-wrap:wrap;
-align-items:center;
-justify-content:center;
-margin-top:10px;
-}
-
-#simulation{
-font-size:30px;
-margin-top:10px;
-}
-
-canvas{
 background:#111;
+border:1px solid #00ff9c;
+height:400px;
+position:relative;
+}
+
+.component{
+padding:5px;
+border:1px solid #00ff9c;
+display:inline-block;
+margin:5px;
+cursor:grab;
 }
 
 </style>
@@ -103,185 +89,156 @@ background:#111;
 <header>
 
 <h1>🦥 SLOTH</h1>
-<p>Real-Time AI Embedded Systems Platform</p>
+<p>AI Embedded Engineering Lab</p>
+
+<input id="apikey" placeholder="sk-...Sk0A">
 
 </header>
 
-<div class="container">
+<div class="tabs">
 
-<section>
+<div class="tab" onclick="openTab('firmware')">Firmware AI</div>
+<div class="tab" onclick="openTab('debug')">AI Debugger</div>
+<div class="tab" onclick="openTab('editor')">Code Editor</div>
+<div class="tab" onclick="openTab('circuit')">Circuit Builder</div>
+<div class="tab" onclick="openTab('scope')">Oscilloscope</div>
+<div class="tab" onclick="openTab('calc')">EEE Calculator</div>
 
-<h2>🔑 OpenAI API</h2>
-<input id="apiKey" placeholder="Paste OpenAI API Key">
+</div>
 
-</section>
+<!-- FIRMWARE -->
 
-<section>
+<div id="firmware" class="panel active">
 
-<h2>🤖 AI Firmware Generator</h2>
+<h2>AI Firmware Generator</h2>
 
 <select id="board">
-
-<option>Arduino Uno</option>
-<option>Arduino Nano</option>
+<option>Arduino</option>
 <option>ESP32</option>
-<option>ESP8266</option>
-<option>STM32</option>
 <option>Raspberry Pi Pico</option>
-
 </select>
 
-<select id="language">
-
-<option>Arduino C++</option>
+<select id="lang">
+<option>C++</option>
 <option>MicroPython</option>
 <option>C</option>
-<option>CircuitPython</option>
-
 </select>
 
-<textarea id="description" placeholder="Describe your project..."></textarea>
+<textarea id="prompt" rows="5"
+placeholder="Example: Blink LED when button pressed"></textarea>
 
 <button onclick="generateFirmware()">Generate Firmware</button>
 
-</section>
-
-<section>
-
-<h2>💻 Code Editor</h2>
-
-<textarea id="code"></textarea>
-
-<button onclick="debugCode()">AI Debug</button>
-
-</section>
-
-<section>
-
-<h2>🧠 Real-Time AI Assistant</h2>
-
-<textarea id="assistantInput" placeholder="Ask electronics questions..."></textarea>
-
-<textarea id="assistantOutput"></textarea>
-
-</section>
-
-<section>
-
-<h2>🔧 Circuit Builder</h2>
-
-<div class="components">
-
-<div draggable="true" ondragstart="drag(event)" id="led">💡 LED</div>
-<div draggable="true" ondragstart="drag(event)" id="resistor">📏 Resistor</div>
-<div draggable="true" ondragstart="drag(event)" id="button">🔘 Button</div>
-<div draggable="true" ondragstart="drag(event)" id="sensor">🌡 Sensor</div>
-<div draggable="true" ondragstart="drag(event)" id="wire">🧵 Wire</div>
+<textarea id="firmwareCode" rows="15"></textarea>
 
 </div>
 
-<div id="canvas" ondrop="drop(event)" ondragover="allowDrop(event)">
-Drop Components Here
+<!-- DEBUG -->
+
+<div id="debug" class="panel">
+
+<h2>AI Code Debugger</h2>
+
+<textarea id="debugInput" rows="10"></textarea>
+
+<button onclick="debugCode()">Analyze Code</button>
+
+<textarea id="debugOutput" rows="10"></textarea>
+
 </div>
+
+<!-- EDITOR -->
+
+<div id="editor" class="panel">
+
+<h2>Embedded Code Editor</h2>
+
+<textarea id="editorCode" rows="20"></textarea>
+
+</div>
+
+<!-- CIRCUIT -->
+
+<div id="circuit" class="panel">
+
+<h2>Circuit Builder</h2>
+
+<div>
+
+<div class="component" draggable="true">💡 LED</div>
+<div class="component" draggable="true">📏 Resistor</div>
+<div class="component" draggable="true">🔘 Button</div>
+<div class="component" draggable="true">🔋 Battery</div>
+
+</div>
+
+<div id="canvas"></div>
 
 <button onclick="simulate()">Run Simulation</button>
 
-<div id="simulation"></div>
+</div>
 
-</section>
+<!-- OSCILLOSCOPE -->
 
-<section>
+<div id="scope" class="panel">
 
-<h2>📡 Oscilloscope</h2>
+<h2>Waveform Viewer</h2>
 
-<canvas id="wave"></canvas>
+<canvas id="chart"></canvas>
 
-<button onclick="wave()">Generate Signal</button>
+<button onclick="wave()">Generate Waveform</button>
 
-</section>
+</div>
 
-<section>
+<!-- CALCULATOR -->
 
-<h2>📐 Ohm's Law Calculator</h2>
+<div id="calc" class="panel">
 
-<input id="v" placeholder="Voltage (V)">
-<input id="i" placeholder="Current (I)">
-<input id="r" placeholder="Resistance (Ω)">
+<h2>EEE Calculator</h2>
+
+<h3>Ohm's Law</h3>
+
+<input id="v" placeholder="Voltage">
+<input id="r" placeholder="Resistance">
 
 <button onclick="ohm()">Calculate</button>
 
-<p id="ohmResult"></p>
+<p id="ohm"></p>
 
-</section>
+<h3>Resistors in Series</h3>
+
+<input id="series" placeholder="100,220,330">
+
+<button onclick="seriesCalc()">Calculate</button>
+
+<p id="seriesRes"></p>
+
+<h3>Resistors in Parallel</h3>
+
+<input id="parallel" placeholder="100,220,330">
+
+<button onclick="parallelCalc()">Calculate</button>
+
+<p id="parallelRes"></p>
 
 </div>
 
 <script>
 
-function allowDrop(ev){ev.preventDefault()}
+function openTab(id){
 
-function drag(ev){ev.dataTransfer.setData("text",ev.target.id)}
+document.querySelectorAll(".panel")
+.forEach(p=>p.classList.remove("active"))
 
-function drop(ev){
-ev.preventDefault()
-let data=ev.dataTransfer.getData("text")
-ev.target.innerHTML+=" "+data
-}
-
-function simulate(){
-
-let canvas=document.getElementById("canvas").innerHTML
-
-if(canvas.includes("led")){
-document.getElementById("simulation").innerHTML="💡 LED ON"
-}
-else{
-document.getElementById("simulation").innerHTML="Simulation running"
-}
+document.getElementById(id).classList.add("active")
 
 }
 
-function wave(){
+async function askAI(text){
 
-let ctx=document.getElementById("wave")
+let key=document.getElementById("apikey").value
 
-let data=[]
-
-for(let i=0;i<120;i++){
-data.push(Math.sin(i/10))
-}
-
-new Chart(ctx,{
-type:'line',
-data:{
-labels:data,
-datasets:[{data:data}]
-}
-})
-
-}
-
-function ohm(){
-
-let V=document.getElementById("v").value
-let I=document.getElementById("i").value
-let R=document.getElementById("r").value
-
-let result=""
-
-if(V && R) result="Current = "+(V/R)
-else if(V && I) result="Resistance = "+(V/I)
-else if(I && R) result="Voltage = "+(I*R)
-
-document.getElementById("ohmResult").innerText=result
-
-}
-
-async function callAI(prompt){
-
-let key=document.getElementById("apiKey").value
-
-let response=await fetch("https://api.openai.com/v1/chat/completions",{
+let r=await fetch("https://api.openai.com/v1/chat/completions",{
 
 method:"POST",
 
@@ -292,15 +249,15 @@ headers:{
 
 body:JSON.stringify({
 
-model:"gpt-4.1-mini",
+model:"gpt-4o-mini",
 
-messages:[{role:"user",content:prompt}]
-
-})
+messages:[{role:"user",content:text}]
 
 })
 
-let data=await response.json()
+})
+
+let data=await r.json()
 
 return data.choices[0].message.content
 
@@ -308,51 +265,127 @@ return data.choices[0].message.content
 
 async function generateFirmware(){
 
-let desc=document.getElementById("description").value
 let board=document.getElementById("board").value
-let language=document.getElementById("language").value
+let lang=document.getElementById("lang").value
+let prompt=document.getElementById("prompt").value
 
-let prompt=`Write firmware for ${board} using ${language}. Project: ${desc}. Return only code.`
+let result=await askAI(
 
-let result=await callAI(prompt)
+"Generate "+lang+" firmware for "+board+" project: "+prompt+
+". Include comments and wiring instructions."
+)
 
-document.getElementById("code").value=result
+document.getElementById("firmwareCode").value=result
 
 }
 
 async function debugCode(){
 
-let code=document.getElementById("code").value
+let code=document.getElementById("debugInput").value
 
-let prompt=`Debug this firmware:\n${code}`
+let result=await askAI(
 
-let result=await callAI(prompt)
+"Debug this firmware and explain fixes:\n"+code
+)
 
-alert(result)
+document.getElementById("debugOutput").value=result
 
 }
 
-let timer=null
+let canvas=document.getElementById("canvas")
 
-document.getElementById("assistantInput").addEventListener("input",function(){
+document.querySelectorAll(".component").forEach(el=>{
 
-clearTimeout(timer)
+el.addEventListener("dragstart",e=>{
 
-timer=setTimeout(async()=>{
-
-let question=this.value
-
-if(question.length<5) return
-
-let prompt=`Answer this embedded systems question:\n${question}`
-
-let result=await callAI(prompt)
-
-document.getElementById("assistantOutput").value=result
-
-},1200)
+e.dataTransfer.setData("text",e.target.innerText)
 
 })
+
+})
+
+canvas.addEventListener("dragover",e=>e.preventDefault())
+
+canvas.addEventListener("drop",e=>{
+
+e.preventDefault()
+
+let d=document.createElement("div")
+
+d.innerText=e.dataTransfer.getData("text")
+
+d.style.position="absolute"
+
+d.style.left=e.offsetX+"px"
+
+d.style.top=e.offsetY+"px"
+
+canvas.appendChild(d)
+
+})
+
+function simulate(){
+
+let leds=canvas.innerText.includes("LED")
+
+if(leds) alert("LED ON simulation")
+
+}
+
+function wave(){
+
+let ctx=document.getElementById("chart")
+
+new Chart(ctx,{
+
+type:"line",
+
+data:{
+
+labels:[...Array(100).keys()],
+
+datasets:[{
+
+data:[...Array(100)].map((_,i)=>Math.sin(i/5))
+
+}]
+
+}
+
+})
+
+}
+
+function ohm(){
+
+let v=document.getElementById("v").value
+let r=document.getElementById("r").value
+
+document.getElementById("ohm").innerText="Current = "+v/r+" A"
+
+}
+
+function seriesCalc(){
+
+let s=document.getElementById("series").value.split(",").map(Number)
+
+let total=s.reduce((a,b)=>a+b,0)
+
+document.getElementById("seriesRes").innerText=total+" Ω"
+
+}
+
+function parallelCalc(){
+
+let s=document.getElementById("parallel").value.split(",").map(Number)
+
+let inv=0
+
+s.forEach(x=>inv+=1/x)
+
+document.getElementById("parallelRes").innerText=(1/inv)+" Ω"
+
+}
 
 </script>
 
