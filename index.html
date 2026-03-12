@@ -11,73 +11,99 @@
 <style>
 
 body{
-background:#0a0a0a;
-color:#00ff9c;
-font-family:Arial;
 margin:0;
+font-family:Arial;
+background:#0a0a0a;
+color:#00ffa6;
+display:flex;
+height:100vh;
+}
+
+/* SIDEBAR */
+
+#sidebar{
+width:250px;
+background:#050505;
+border-right:1px solid #00ffa6;
+overflow:auto;
+}
+
+.tool{
+padding:14px;
+cursor:pointer;
+border-bottom:1px solid #002a1f;
+}
+
+.tool:hover{
+background:#002a1f;
+}
+
+/* MAIN */
+
+#main{
+flex:1;
+display:flex;
+flex-direction:column;
 }
 
 header{
-padding:15px;
-text-align:center;
-border-bottom:1px solid #00ff9c;
-}
-
-.tabs{
-display:flex;
-flex-wrap:wrap;
-border-bottom:1px solid #00ff9c;
-}
-
-.tab{
 padding:12px;
-cursor:pointer;
-border-right:1px solid #00ff9c;
+border-bottom:1px solid #00ffa6;
 }
 
-.tab:hover{
-background:#002a1f;
+.workspace{
+flex:1;
+padding:20px;
+overflow:auto;
 }
 
 .panel{
 display:none;
-padding:20px;
 }
 
 .active{
 display:block;
 }
 
-textarea,input,select{
+input,textarea,select{
+
 width:100%;
 background:#111;
-color:#00ff9c;
-border:1px solid #00ff9c;
-padding:10px;
-margin-top:10px;
+color:#00ffa6;
+border:1px solid #00ffa6;
+padding:8px;
+margin-top:8px;
+
 }
 
 button{
-margin-top:10px;
-padding:10px;
-background:#00ff9c;
-border:none;
-cursor:pointer;
-}
 
-#canvas{
-background:#111;
-border:1px solid #00ff9c;
-height:400px;
-position:relative;
+background:#00ffa6;
+border:none;
+padding:8px;
+margin-top:10px;
+cursor:pointer;
+
 }
 
 .component{
-padding:5px;
-border:1px solid #00ff9c;
+
+border:1px solid #00ffa6;
+padding:6px;
+margin:4px;
 display:inline-block;
-margin:5px;
 cursor:grab;
+
+}
+
+#canvas{
+
+background:#111;
+height:420px;
+border:1px solid #00ffa6;
+position:relative;
+margin-top:10px;
+
 }
 
 </style>
@@ -86,95 +112,144 @@ cursor:grab;
 
 <body>
 
+<div id="sidebar">
+
+<div class="tool" onclick="openPanel('firmware')">🤖 Firmware Generator</div>
+<div class="tool" onclick="openPanel('editor')">💻 Code Editor</div>
+<div class="tool" onclick="openPanel('circuit')">🔧 Circuit Builder</div>
+<div class="tool" onclick="openPanel('scope')">📡 Oscilloscope</div>
+<div class="tool" onclick="openPanel('calc')">📐 EEE Calculators</div>
+
+</div>
+
+<div id="main">
+
 <header>
 
-<h1>🦥 SLOTH</h1>
-<p>AI Embedded Engineering Lab</p>
+<h2>🦥 SLOTH Embedded Engineering Lab</h2>
 
-<input id="apikey" placeholder="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">
+<input id="apikey" placeholder="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">
 
 </header>
 
-<div class="tabs">
-
-<div class="tab" onclick="openTab('firmware')">Firmware AI</div>
-<div class="tab" onclick="openTab('debug')">AI Debugger</div>
-<div class="tab" onclick="openTab('editor')">Code Editor</div>
-<div class="tab" onclick="openTab('circuit')">Circuit Builder</div>
-<div class="tab" onclick="openTab('scope')">Oscilloscope</div>
-<div class="tab" onclick="openTab('calc')">EEE Calculator</div>
-
-</div>
+<div class="workspace">
 
 <!-- FIRMWARE -->
 
 <div id="firmware" class="panel active">
 
-<h2>AI Firmware Generator</h2>
+<h3>Firmware Generator</h3>
 
-<select id="board">
-<option>Arduino</option>
+<label>Microcontroller</label>
+
+<select id="mc">
+
+<option>Arduino Uno</option>
+<option>Arduino Mega</option>
 <option>ESP32</option>
+<option>ESP8266</option>
 <option>Raspberry Pi Pico</option>
+<option>STM32</option>
+<option>ATtiny85</option>
+<option>PIC16F877A</option>
+
 </select>
+
+<label>Programming Language</label>
 
 <select id="lang">
-<option>C++</option>
-<option>MicroPython</option>
+
 <option>C</option>
+<option>C++</option>
+<option>Arduino</option>
+<option>Embedded C</option>
+<option>MicroPython</option>
+
 </select>
 
-<textarea id="prompt" rows="5"
-placeholder="Example: Blink LED when button pressed"></textarea>
+<label>Components Used</label>
+
+<select id="components" multiple size="6">
+
+<option>LED</option>
+<option>Button</option>
+<option>Servo Motor</option>
+<option>DC Motor</option>
+<option>Ultrasonic Sensor</option>
+<option>Temperature Sensor</option>
+<option>LDR</option>
+<option>Relay</option>
+<option>Buzzer</option>
+<option>LCD Display</option>
+<option>OLED Display</option>
+<option>IR Sensor</option>
+
+</select>
+
+<label>Desired Function</label>
+
+<textarea id="function" rows="5"
+placeholder="Example: Turn on LED when button pressed and show message on LCD"></textarea>
 
 <button onclick="generateFirmware()">Generate Firmware</button>
 
-<textarea id="firmwareCode" rows="15"></textarea>
+<textarea id="firmwareCode" rows="16"></textarea>
 
 </div>
 
-<!-- DEBUG -->
-
-<div id="debug" class="panel">
-
-<h2>AI Code Debugger</h2>
-
-<textarea id="debugInput" rows="10"></textarea>
-
-<button onclick="debugCode()">Analyze Code</button>
-
-<textarea id="debugOutput" rows="10"></textarea>
-
-</div>
-
-<!-- EDITOR -->
+<!-- CODE EDITOR -->
 
 <div id="editor" class="panel">
 
-<h2>Embedded Code Editor</h2>
+<h3>Code Editor</h3>
 
-<textarea id="editorCode" rows="20"></textarea>
+<textarea rows="20" placeholder="Write or edit embedded code here"></textarea>
 
 </div>
 
-<!-- CIRCUIT -->
+<!-- CIRCUIT BUILDER -->
 
 <div id="circuit" class="panel">
 
-<h2>Circuit Builder</h2>
+<h3>Circuit Builder</h3>
 
-<div>
+<h4>Passive Components</h4>
 
-<div class="component" draggable="true">💡 LED</div>
-<div class="component" draggable="true">📏 Resistor</div>
-<div class="component" draggable="true">🔘 Button</div>
-<div class="component" draggable="true">🔋 Battery</div>
+<div class="component" draggable="true">Resistor</div>
+<div class="component" draggable="true">Capacitor</div>
+<div class="component" draggable="true">Inductor</div>
 
-</div>
+<h4>Diodes</h4>
+
+<div class="component" draggable="true">LED</div>
+<div class="component" draggable="true">Diode</div>
+<div class="component" draggable="true">Zener</div>
+
+<h4>Transistors</h4>
+
+<div class="component" draggable="true">NPN</div>
+<div class="component" draggable="true">PNP</div>
+<div class="component" draggable="true">MOSFET</div>
+
+<h4>Sources</h4>
+
+<div class="component" draggable="true">Battery</div>
+<div class="component" draggable="true">AC Source</div>
+<div class="component" draggable="true">DC Supply</div>
+
+<h4>Sensors</h4>
+
+<div class="component" draggable="true">Temperature Sensor</div>
+<div class="component" draggable="true">LDR</div>
+<div class="component" draggable="true">Ultrasonic</div>
+
+<h4>Microcontrollers</h4>
+
+<div class="component" draggable="true">Arduino</div>
+<div class="component" draggable="true">ESP32</div>
+<div class="component" draggable="true">Raspberry Pi Pico</div>
 
 <div id="canvas"></div>
-
-<button onclick="simulate()">Run Simulation</button>
 
 </div>
 
@@ -182,30 +257,32 @@ placeholder="Example: Blink LED when button pressed"></textarea>
 
 <div id="scope" class="panel">
 
-<h2>Waveform Viewer</h2>
+<h3>Oscilloscope</h3>
+
+<input id="waveInput" placeholder="Example: 0,1,2,1,0,-1,-2,-1">
+
+<button onclick="plotWave()">Plot Waveform</button>
 
 <canvas id="chart"></canvas>
 
-<button onclick="wave()">Generate Waveform</button>
-
 </div>
 
-<!-- CALCULATOR -->
+<!-- CALCULATORS -->
 
 <div id="calc" class="panel">
 
-<h2>EEE Calculator</h2>
+<h3>EEE Calculators</h3>
 
-<h3>Ohm's Law</h3>
+<h4>Ohm's Law</h4>
 
 <input id="v" placeholder="Voltage">
 <input id="r" placeholder="Resistance">
 
 <button onclick="ohm()">Calculate</button>
 
-<p id="ohm"></p>
+<p id="ohmRes"></p>
 
-<h3>Resistors in Series</h3>
+<h4>Series Resistors</h4>
 
 <input id="series" placeholder="100,220,330">
 
@@ -213,7 +290,7 @@ placeholder="Example: Blink LED when button pressed"></textarea>
 
 <p id="seriesRes"></p>
 
-<h3>Resistors in Parallel</h3>
+<h4>Parallel Resistors</h4>
 
 <input id="parallel" placeholder="100,220,330">
 
@@ -221,11 +298,35 @@ placeholder="Example: Blink LED when button pressed"></textarea>
 
 <p id="parallelRes"></p>
 
+<h4>Capacitive Reactance</h4>
+
+<input id="freqC" placeholder="Frequency">
+<input id="cap" placeholder="Capacitance">
+
+<button onclick="capacitive()">Calculate</button>
+
+<p id="capRes"></p>
+
+<h4>Inductive Reactance</h4>
+
+<input id="freqL" placeholder="Frequency">
+<input id="ind" placeholder="Inductance">
+
+<button onclick="inductive()">Calculate</button>
+
+<p id="indRes"></p>
+
+</div>
+
+</div>
+
 </div>
 
 <script>
 
-function openTab(id){
+/* PANEL SWITCH */
+
+function openPanel(id){
 
 document.querySelectorAll(".panel")
 .forEach(p=>p.classList.remove("active"))
@@ -234,9 +335,49 @@ document.getElementById(id).classList.add("active")
 
 }
 
-async function askAI(text){
+/* AI FIRMWARE GENERATOR */
+
+async function generateFirmware(){
 
 let key=document.getElementById("apikey").value
+
+if(!key){
+
+alert("Insert OpenAI API key")
+
+return
+
+}
+
+let mc=document.getElementById("mc").value
+let lang=document.getElementById("lang").value
+
+let comps=[...document.getElementById("components").selectedOptions]
+.map(o=>o.value)
+
+let func=document.getElementById("function").value
+
+let prompt=`
+
+Generate COMPLETE working firmware.
+
+Microcontroller: ${mc}
+Programming Language: ${lang}
+
+Components:
+${comps.join(", ")}
+
+Function:
+${func}
+
+Requirements:
+- include libraries
+- pin definitions
+- setup and loop
+- comments explaining code
+- wiring instructions
+
+`
 
 let r=await fetch("https://api.openai.com/v1/chat/completions",{
 
@@ -251,7 +392,9 @@ body:JSON.stringify({
 
 model:"gpt-4o-mini",
 
-messages:[{role:"user",content:text}]
+messages:[
+{role:"user",content:prompt}
+]
 
 })
 
@@ -259,38 +402,11 @@ messages:[{role:"user",content:text}]
 
 let data=await r.json()
 
-return data.choices[0].message.content
+document.getElementById("firmwareCode").value=data.choices[0].message.content
 
 }
 
-async function generateFirmware(){
-
-let board=document.getElementById("board").value
-let lang=document.getElementById("lang").value
-let prompt=document.getElementById("prompt").value
-
-let result=await askAI(
-
-"Generate "+lang+" firmware for "+board+" project: "+prompt+
-". Include comments and wiring instructions."
-)
-
-document.getElementById("firmwareCode").value=result
-
-}
-
-async function debugCode(){
-
-let code=document.getElementById("debugInput").value
-
-let result=await askAI(
-
-"Debug this firmware and explain fixes:\n"+code
-)
-
-document.getElementById("debugOutput").value=result
-
-}
+/* CIRCUIT BUILDER */
 
 let canvas=document.getElementById("canvas")
 
@@ -315,53 +431,41 @@ let d=document.createElement("div")
 d.innerText=e.dataTransfer.getData("text")
 
 d.style.position="absolute"
-
 d.style.left=e.offsetX+"px"
-
 d.style.top=e.offsetY+"px"
 
 canvas.appendChild(d)
 
 })
 
-function simulate(){
+/* OSCILLOSCOPE */
 
-let leds=canvas.innerText.includes("LED")
+function plotWave(){
 
-if(leds) alert("LED ON simulation")
+let values=document.getElementById("waveInput").value
+.split(",").map(Number)
 
-}
-
-function wave(){
-
-let ctx=document.getElementById("chart")
-
-new Chart(ctx,{
+new Chart(document.getElementById("chart"),{
 
 type:"line",
 
 data:{
-
-labels:[...Array(100).keys()],
-
-datasets:[{
-
-data:[...Array(100)].map((_,i)=>Math.sin(i/5))
-
-}]
-
+labels:values.map((_,i)=>i),
+datasets:[{data:values}]
 }
 
 })
 
 }
 
+/* CALCULATORS */
+
 function ohm(){
 
 let v=document.getElementById("v").value
 let r=document.getElementById("r").value
 
-document.getElementById("ohm").innerText="Current = "+v/r+" A"
+document.getElementById("ohmRes").innerText="Current = "+(v/r)+" A"
 
 }
 
@@ -369,9 +473,9 @@ function seriesCalc(){
 
 let s=document.getElementById("series").value.split(",").map(Number)
 
-let total=s.reduce((a,b)=>a+b,0)
+let t=s.reduce((a,b)=>a+b,0)
 
-document.getElementById("seriesRes").innerText=total+" Ω"
+document.getElementById("seriesRes").innerText=t+" Ω"
 
 }
 
@@ -384,6 +488,28 @@ let inv=0
 s.forEach(x=>inv+=1/x)
 
 document.getElementById("parallelRes").innerText=(1/inv)+" Ω"
+
+}
+
+function capacitive(){
+
+let f=document.getElementById("freqC").value
+let c=document.getElementById("cap").value
+
+let xc=1/(2*Math.PI*f*c)
+
+document.getElementById("capRes").innerText="Xc = "+xc+" Ω"
+
+}
+
+function inductive(){
+
+let f=document.getElementById("freqL").value
+let l=document.getElementById("ind").value
+
+let xl=2*Math.PI*f*l
+
+document.getElementById("indRes").innerText="Xl = "+xl+" Ω"
 
 }
 
