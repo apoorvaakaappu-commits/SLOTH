@@ -1,93 +1,156 @@
 <!DOCTYPE html>
 <html>
-<head>
 
+<head>
 <meta charset="UTF-8">
-<title>🦥 SLOTH </title>
+<title>🦥 SLOTH Embedded Builder</title>
 
 <style>
 
 body{
 margin:0;
-background:#050505;
-color:#00ffa6;
-font-family:Consolas;
-display:flex;
-justify-content:center;
+font-family:Consolas,monospace;
+background:linear-gradient(270deg,#000,#002822,#000);
+background-size:400% 400%;
+animation:bg 12s infinite;
+color:#00ffaa;
+}
+
+@keyframes bg{
+0%{background-position:0% 50%;}
+50%{background-position:100% 50%;}
+100%{background-position:0% 50%;}
+}
+
+header{
+text-align:center;
+font-size:34px;
+padding:20px;
+border-bottom:2px solid #00ffaa;
 }
 
 .container{
-width:1000px;
-padding:30px;
+max-width:1200px;
+margin:auto;
+padding:20px;
 }
 
-h1{
-text-align:center;
-font-size:40px;
+.card{
+background:rgba(0,0,0,0.75);
+border:1px solid #00ffaa;
+border-radius:8px;
+padding:20px;
+margin-bottom:20px;
 }
 
-.panel{
-background:#0a0a0a;
-border:1px solid #00ffa6;
-padding:25px;
-margin-top:20px;
+.grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:15px;
 }
 
-select,button{
-width:100%;
-padding:12px;
-margin-top:12px;
-background:#111;
-border:1px solid #00ffa6;
-color:#00ffa6;
-font-size:16px;
+select,input,textarea{
+background:black;
+color:#00ffaa;
+border:1px solid #00ffaa;
+padding:8px;
 }
 
 textarea{
 width:100%;
-height:260px;
-margin-top:15px;
-background:#030303;
-color:#00ffa6;
-border:1px solid #00ffa6;
+height:350px;
+}
+
+button{
+background:black;
+color:#00ffaa;
+border:1px solid #00ffaa;
+padding:10px;
+cursor:pointer;
+margin-right:6px;
 }
 
 button:hover{
-background:#00ffa6;
+background:#00ffaa;
 color:black;
-cursor:pointer;
+}
+
+li{
+margin:6px;
 }
 
 </style>
-
 </head>
 
 <body>
 
+<header>🦥 SLOTH Embedded Builder</header>
+
 <div class="container">
 
-<h1>🦥 SLOTH Firmware Generator</h1>
-<p align="center">⚡ Universal Embedded Code Builder ⚡</p>
+<div class="card">
 
-<div class="panel">
+<h2>Firmware Builder</h2>
 
-<h3>📟 Microcontroller</h3>
-<select id="mcu" onchange="updateLanguages()"></select>
+<div class="grid">
 
-<h3>💻 Programming Language</h3>
-<select id="lang"></select>
+<div>
+MCU Family<br>
+<select id="family"></select>
+</div>
 
-<h3>🔌 Component</h3>
+<div>
+MCU<br>
+<select id="mcu"></select>
+</div>
+
+<div>
+Search MCU<br>
+<input id="search" placeholder="Search device">
+</div>
+
+<div>
+Programming Language<br>
+<select id="language">
+<option>Arduino C++</option>
+<option>C</option>
+<option>MicroPython</option>
+</select>
+</div>
+
+<div>
+Component<br>
 <select id="component"></select>
+</div>
 
-<h3>⚙ Function</h3>
-<select id="func"></select>
+<div>
+Function<br>
+<select id="operation"></select>
+</div>
 
-<button onclick="generate()">🚀 Generate Firmware</button>
+<div>
+Pin<br>
+<select id="pin"></select>
+</div>
+
+</div>
+
+<br>
+
+<button id="add">Add Module</button>
+<button id="generate">Generate Firmware</button>
+<button id="download">Download</button>
+<button id="clear">Clear</button>
+
+<ul id="modules"></ul>
+
+</div>
+
+<div class="card">
+
+<h2>Generated Firmware</h2>
 
 <textarea id="code"></textarea>
-
-<button onclick="copyCode()">📋 Copy Code</button>
 
 </div>
 
@@ -95,224 +158,300 @@ cursor:pointer;
 
 <script>
 
-/* ---------------- MCU DATABASE ---------------- */
+document.addEventListener("DOMContentLoaded",function(){
 
-const mcuDB={
+const family=document.getElementById("family")
+const mcu=document.getElementById("mcu")
+const component=document.getElementById("component")
+const operation=document.getElementById("operation")
+const pin=document.getElementById("pin")
+const modules=document.getElementById("modules")
+const code=document.getElementById("code")
+const search=document.getElementById("search")
 
-"Arduino Uno":{
-languages:["Arduino C++"],
-components:["LED","Button","Servo","Ultrasonic","LCD","Buzzer","Relay"],
-functions:["Blink LED","Read Button","Servo Sweep","Display Text"]
-},
+/* =====================
+MCU DATABASE
+===================== */
 
-"Arduino Mega":{
-languages:["Arduino C++"],
-components:["LED","Button","Servo","LCD","Stepper Motor"],
-functions:["Blink LED","Stepper Control","Read Button"]
-},
-
-"ESP32":{
-languages:["C++","Arduino","MicroPython"],
-components:["LED","WiFi","Bluetooth","Servo","Ultrasonic","LCD"],
-functions:["Blink LED","WiFi Scan","Servo Control","Distance Measure"]
-},
-
-"ESP8266":{
-languages:["C++","Arduino","MicroPython"],
-components:["LED","WiFi","Relay"],
-functions:["Blink LED","WiFi WebServer"]
-},
-
-"Raspberry Pi Pico":{
-languages:["C","MicroPython"],
-components:["LED","Servo","Ultrasonic"],
-functions:["Blink LED","Servo Sweep"]
-},
-
-"STM32":{
-languages:["C","C++"],
-components:["LED","UART","SPI","I2C","ADC"],
-functions:["Blink LED","ADC Read"]
-},
-
-"ATmega328":{
-languages:["C"],
-components:["LED","Button","UART"],
-functions:["Blink LED"]
-},
-
-"ATtiny85":{
-languages:["C"],
-components:["LED","Button"],
-functions:["Blink LED"]
-},
-
-"PIC16F877A":{
-languages:["C"],
-components:["LED","LCD","ADC"],
-functions:["Blink LED","ADC Read"]
-},
-
-"MSP430":{
-languages:["C"],
-components:["LED","Button","UART"],
-functions:["Blink LED"]
-},
-
-"NXP LPC1768":{
-languages:["C","C++"],
-components:["LED","Ethernet","LCD"],
-functions:["Blink LED"]
-},
-
-"Teensy 4.0":{
-languages:["C++","Arduino"],
-components:["LED","Audio","USB"],
-functions:["Blink LED","Audio Output"]
+const db={
+Arduino:{mcus:["Uno","Nano","Mega","Leonardo","Due"]},
+ESP:{mcus:["ESP8266","ESP32","ESP32S2","ESP32S3"]},
+STM32:{mcus:[]},
+AVR:{mcus:[]},
+PIC:{mcus:[]},
+NXP:{mcus:[]},
+TI:{mcus:[]},
+Nordic:{mcus:[]},
+Renesas:{mcus:[]},
+Infineon:{mcus:[]},
+SiliconLabs:{mcus:[]},
+GD32:{mcus:[]}
 }
 
-}
+/* Generate many MCUs */
 
-/* ------------ Populate MCU List ------------ */
+for(let i=0;i<200;i++){db.AVR.mcus.push("ATmega"+(100+i))}
+for(let i=0;i<200;i++){db.PIC.mcus.push("PIC16F"+(800+i))}
+for(let i=0;i<200;i++){db.PIC.mcus.push("PIC18F"+(2000+i))}
+for(let i=0;i<300;i++){db.STM32.mcus.push("STM32F"+(100+i))}
+for(let i=0;i<120;i++){db.NXP.mcus.push("LPC"+(1000+i))}
+for(let i=0;i<120;i++){db.TI.mcus.push("MSP430"+(100+i))}
+for(let i=0;i<120;i++){db.GD32.mcus.push("GD32F"+(100+i))}
+for(let i=0;i<120;i++){db.SiliconLabs.mcus.push("EFM32"+(100+i))}
+for(let i=0;i<120;i++){db.Infineon.mcus.push("XMC"+(100+i))}
+for(let i=0;i<120;i++){db.Renesas.mcus.push("RA"+(100+i))}
+for(let i=0;i<120;i++){db.Nordic.mcus.push("nRF52"+(800+i))}
 
-const mcuSelect=document.getElementById("mcu")
+/* Load families */
 
-Object.keys(mcuDB).forEach(m=>{
+Object.keys(db).forEach(f=>{
 let o=document.createElement("option")
-o.text=m
-mcuSelect.add(o)
+o.textContent=f
+family.appendChild(o)
 })
 
-updateLanguages()
+function loadMCU(){
 
-/* --------- Update Language / Components ---------- */
+let fam=family.value
+mcu.innerHTML=""
 
-function updateLanguages(){
-
-let mcu=mcuSelect.value
-
-let lang=document.getElementById("lang")
-let comp=document.getElementById("component")
-let func=document.getElementById("func")
-
-lang.innerHTML=""
-comp.innerHTML=""
-func.innerHTML=""
-
-mcuDB[mcu].languages.forEach(l=>{
+db[fam].mcus.forEach(chip=>{
 let o=document.createElement("option")
-o.text=l
-lang.add(o)
-})
-
-mcuDB[mcu].components.forEach(c=>{
-let o=document.createElement("option")
-o.text=c
-comp.add(o)
-})
-
-mcuDB[mcu].functions.forEach(f=>{
-let o=document.createElement("option")
-o.text=f
-func.add(o)
+o.textContent=chip
+mcu.appendChild(o)
 })
 
 }
 
-/* ------------ Firmware Generator ------------ */
+family.addEventListener("change",loadMCU)
+loadMCU()
 
-function generate(){
+/* Search */
 
-let mcu=document.getElementById("mcu").value
-let lang=document.getElementById("lang").value
-let comp=document.getElementById("component").value
-let func=document.getElementById("func").value
+search.oninput=function(){
 
-let code=`// 🦥 Generated by SLOTH
-// MCU: ${mcu}
-// Language: ${lang}
-// Component: ${comp}
-// Function: ${func}
+let text=search.value.toLowerCase()
+let fam=family.value
 
-`
+mcu.innerHTML=""
 
-if(func=="Blink LED"){
-
-code+=`
-int led=13;
-
-void setup(){
-pinMode(led,OUTPUT);
+db[fam].mcus.forEach(chip=>{
+if(chip.toLowerCase().includes(text)){
+let o=document.createElement("option")
+o.textContent=chip
+mcu.appendChild(o)
 }
-
-void loop(){
-digitalWrite(led,HIGH);
-delay(1000);
-digitalWrite(led,LOW);
-delay(1000);
-}
-`
+})
 
 }
 
-else if(func=="Servo Sweep"){
+/* =====================
+COMPONENTS
+===================== */
 
-code+=`
-#include <Servo.h>
+const components=[
+"LED","RGB LED","Relay","Buzzer","Servo",
+"DC Motor","Stepper Motor","Motor Driver",
+"OLED Display","LCD Display","TFT Display",
+"Temperature Sensor","Humidity Sensor",
+"Pressure Sensor","Gas Sensor","Light Sensor",
+"Touch Sensor","Ultrasonic Sensor",
+"IR Sensor","Hall Sensor",
+"Accelerometer","Gyroscope","IMU",
+"GPS","Bluetooth","WiFi","LoRa",
+"SD Card","RTC Clock","Encoder",
+"Camera","Microphone"
+]
 
-Servo s;
+components.forEach(c=>{
+let o=document.createElement("option")
+o.textContent=c
+component.appendChild(o)
+})
 
-void setup(){
-s.attach(9);
+/* =====================
+FUNCTIONS
+===================== */
+
+const functions=[
+"Digital Write","Digital Read","Analog Read","PWM Output",
+"Toggle Output","UART Send","UART Receive",
+"I2C Read","I2C Write","SPI Transfer",
+"Interrupt Rising","Interrupt Falling",
+"Timer Delay","Timer Interrupt",
+"Servo Rotate","Motor Forward","Motor Reverse",
+"Motor Stop","Stepper Step","Stepper Rotate",
+"Sensor Read","Temperature Read","Humidity Read",
+"Pressure Read","Ultrasonic Distance",
+"GPS Read","WiFi Connect","WiFi Send Data",
+"Bluetooth Send","Bluetooth Receive",
+"SD Write","SD Read","RTC Time",
+"Encoder Read","Camera Capture","Microphone Read"
+]
+
+functions.forEach(f=>{
+let o=document.createElement("option")
+o.textContent=f
+operation.appendChild(o)
+})
+
+/* Pins */
+
+for(let i=0;i<50;i++){
+let o=document.createElement("option")
+o.textContent=i
+pin.appendChild(o)
 }
 
-void loop(){
+/* =====================
+MODULE STACK
+===================== */
 
-for(int i=0;i<180;i++){
-s.write(i);
-delay(15);
+let stack=[]
+
+document.getElementById("add").onclick=function(){
+
+let m={
+component:component.value,
+func:operation.value,
+pin:pin.value
 }
 
-for(int i=180;i>0;i--){
-s.write(i);
-delay(15);
-}
-
-}
-`
-
-}
-
-else{
-
-code+=`
-void setup(){
+stack.push(m)
+render()
 
 }
 
-void loop(){
+function render(){
+
+modules.innerHTML=""
+
+stack.forEach((m,i)=>{
+
+let li=document.createElement("li")
+li.textContent=`${m.component} -> ${m.func} on pin ${m.pin}`
+
+let del=document.createElement("button")
+del.textContent="X"
+
+del.onclick=function(){
+stack.splice(i,1)
+render()
+}
+
+li.appendChild(del)
+modules.appendChild(li)
+
+})
 
 }
-`
+
+/* =====================
+GENERATE CODE
+===================== */
+
+document.getElementById("generate").onclick=function(){
+
+let language=document.getElementById("language").value
+
+if(language==="Arduino C++"){
+
+let includes=""
+let globals=""
+let setup="void setup(){\n"
+let loop="void loop(){\n"
+
+stack.forEach((m,i)=>{
+
+let p=m.pin
+
+if(m.func==="Digital Write"){
+setup+=` pinMode(${p},OUTPUT);\n`
+loop+=` digitalWrite(${p},HIGH);\n`
+}
+
+if(m.func==="Digital Read"){
+setup+=` pinMode(${p},INPUT);\n`
+loop+=` int val${i}=digitalRead(${p});\n`
+}
+
+if(m.func==="Analog Read"){
+loop+=` int val${i}=analogRead(${p});\n`
+}
+
+if(m.func==="PWM Output"){
+setup+=` pinMode(${p},OUTPUT);\n`
+loop+=` analogWrite(${p},128);\n`
+}
+
+if(m.func==="Servo Rotate"){
+includes+="#include <Servo.h>\n"
+globals+=`Servo servo${i};\n`
+setup+=` servo${i}.attach(${p});\n`
+loop+=` servo${i}.write(90);\n`
+}
+
+})
+
+setup+="}\n\n"
+loop+="delay(1000);\n}\n"
+
+code.value=`${includes}\n${globals}\n${setup}${loop}`
 
 }
 
-document.getElementById("code").value=code
+/* MicroPython */
+
+if(language==="MicroPython"){
+
+let py="from machine import Pin\nimport time\n\n"
+
+stack.forEach((m,i)=>{
+
+if(m.func==="Digital Write"){
+py+=`led${i}=Pin(${m.pin},Pin.OUT)\n`
+py+=`led${i}.value(1)\n`
+}
+
+if(m.func==="Digital Read"){
+py+=`btn${i}=Pin(${m.pin},Pin.IN)\n`
+py+=`print(btn${i}.value())\n`
+}
+
+})
+
+py+="\nwhile True:\n time.sleep(1)\n"
+
+code.value=py
 
 }
 
-/* -------- Copy Code -------- */
+}
 
-function copyCode(){
+/* Download */
 
-let t=document.getElementById("code")
+document.getElementById("download").onclick=function(){
 
-t.select()
-document.execCommand("copy")
+let blob=new Blob([code.value],{type:"text/plain"})
 
-alert("📋 Firmware copied!")
+let a=document.createElement("a")
+a.href=URL.createObjectURL(blob)
+a.download="sloth_firmware.ino"
+a.click()
 
 }
+
+/* Clear */
+
+document.getElementById("clear").onclick=function(){
+
+stack=[]
+modules.innerHTML=""
+code.value=""
+
+}
+
+})
 
 </script>
 
