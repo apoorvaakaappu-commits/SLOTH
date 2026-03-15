@@ -1,459 +1,294 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>🦥 SLOTH Embedded Builder</title>
-
+<title>🦥 SLOTH Embedded Lab</title>
 <style>
-
 body{
 margin:0;
 font-family:Consolas,monospace;
-background:linear-gradient(270deg,#000,#002822,#000);
-background-size:400% 400%;
-animation:bg 12s infinite;
-color:#00ffaa;
-}
-
-@keyframes bg{
-0%{background-position:0% 50%;}
-50%{background-position:100% 50%;}
-100%{background-position:0% 50%;}
-}
-
-header{
+color:#00ffd5;
 text-align:center;
-font-size:34px;
-padding:20px;
-border-bottom:2px solid #00ffaa;
+background:linear-gradient(rgba(0,0,0,0.85),rgba(0,0,0,0.9)),
+url("https://upload.wikimedia.org/wikipedia/commons/8/8f/Circuit_board_background.jpg");
+background-size:cover;
+background-attachment:fixed;
 }
 
-.container{
-max-width:1200px;
-margin:auto;
-padding:20px;
+h1{
+font-size:60px;
+margin-top:30px;
+text-shadow:0 0 30px #00ffd5,0 0 60px #00aaff;
+}
+
+.menu{
+display:flex;
+justify-content:center;
+flex-wrap:wrap;
+gap:25px;
+margin-top:40px;
 }
 
 .card{
-background:rgba(0,0,0,0.75);
-border:1px solid #00ffaa;
-border-radius:8px;
-padding:20px;
-margin-bottom:20px;
-}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:15px;
-}
-
-select,input,textarea{
-background:black;
-color:#00ffaa;
-border:1px solid #00ffaa;
-padding:8px;
-}
-
-textarea{
-width:100%;
-height:350px;
-}
-
-button{
-background:black;
-color:#00ffaa;
-border:1px solid #00ffaa;
-padding:10px;
+width:200px;
+height:120px;
+border:2px solid #00ffd5;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
 cursor:pointer;
-margin-right:6px;
+background:rgba(0,0,0,.5);
+transition:0.3s;
+}
+.card:hover{
+box-shadow:0 0 25px #00ffd5,0 0 50px #00aaff;
+transform:scale(1.05);
 }
 
-button:hover{
-background:#00ffaa;
-color:black;
-}
+.panel{display:none;padding:20px;}
 
-li{
+select,input,button,textarea{
+background:#000;
+color:#00ffd5;
+border:1px solid #00ffd5;
 margin:6px;
+padding:6px;
+font-size:16px;
 }
 
+textarea{width:95%;height:250px;}
+canvas{background:black;border:1px solid #00ffd5;width:900px;max-width:95%;height:380px;}
+button:hover{box-shadow:0 0 10px #00ffd5;cursor:pointer;}
+
+ul{list-style:none;padding-left:0;}
+li{margin:5px;font-size:16px;}
 </style>
 </head>
-
 <body>
 
-<header>🦥 SLOTH Embedded Builder</header>
+<h1>🦥 SLOTH</h1>
 
-<div class="container">
+<div class="menu">
+<div class="card" onclick="show('firmware')">⚙ Firmware</div>
+<div class="card" onclick="show('calc')">📐 Calculations</div>
+<div class="card" onclick="show('waves')">🌊 Waves</div>
+</div>
 
-<div class="card">
+<!-- FIRMWARE -->
+<div id="firmware" class="panel">
+<h2>⚙ Firmware Builder 🤖</h2>
 
-<h2>Firmware Builder</h2>
-
-<div class="grid">
-
-<div>
-MCU Family<br>
 <select id="family"></select>
-</div>
-
-<div>
-MCU<br>
 <select id="mcu"></select>
-</div>
-
-<div>
-Search MCU<br>
-<input id="search" placeholder="Search device">
-</div>
-
-<div>
-Programming Language<br>
-<select id="language">
-<option>Arduino C++</option>
-<option>C</option>
-<option>MicroPython</option>
-</select>
-</div>
-
-<div>
-Component<br>
+<select id="lang"></select>
 <select id="component"></select>
-</div>
-
-<div>
-Function<br>
-<select id="operation"></select>
-</div>
-
-<div>
-Pin<br>
+<select id="func"></select>
 <select id="pin"></select>
-</div>
-
-</div>
 
 <br>
-
-<button id="add">Add Module</button>
-<button id="generate">Generate Firmware</button>
-<button id="download">Download</button>
-<button id="clear">Clear</button>
+<button onclick="addModule()">➕ Add Module</button>
+<button onclick="generate()">⚡ Generate Code</button>
+<button onclick="copyCode()">📋 Copy</button>
+<button onclick="clearCode()">🧹 Clear</button>
 
 <ul id="modules"></ul>
-
-</div>
-
-<div class="card">
-
-<h2>Generated Firmware</h2>
-
 <textarea id="code"></textarea>
-
+<br>
+<button onclick="home()">🏠 Home</button>
 </div>
 
+<!-- CALCULATIONS -->
+<div id="calc" class="panel">
+<h2>📐 Engineering Calculations</h2>
+<select id="calcType"></select>
+<div id="inputs"></div>
+<button onclick="solve()">⚡ Solve</button>
+<h3 id="result"></h3>
+<button onclick="home()">🏠 Home</button>
+</div>
+
+<!-- WAVES -->
+<div id="waves" class="panel">
+<h2>🌊 Wave Generator</h2>
+<select id="waveType">
+<option>sine</option>
+<option>square</option>
+<option>triangle</option>
+<option>saw</option>
+<option>noise</option>
+</select>
+<input id="freq" type="number" value="1">
+<input id="amp" type="number" value="80">
+<button onclick="startWave()">▶ Start</button>
+<button onclick="stopWave()">⏸ Stop</button>
+<br><br>
+<canvas id="scope"></canvas>
+<br>
+<button onclick="home()">🏠 Home</button>
 </div>
 
 <script>
+function show(id){
+document.querySelectorAll(".panel").forEach(p=>p.style.display="none")
+document.getElementById(id).style.display="block"
+}
+function home(){
+document.querySelectorAll(".panel").forEach(p=>p.style.display="none")
+}
 
-document.addEventListener("DOMContentLoaded",function(){
+/* MCU & Languages */
+const MCU={
+"Arduino":["Uno","Nano","Mega","Leonardo","Due","Nano Every"],
+"ESP":["ESP8266","ESP32","ESP32-S2","ESP32-S3","ESP32-C3"],
+"STM32":["STM32F030","STM32F103","STM32F407","STM32F429"],
+"AVR":["ATmega328","ATmega2560","ATtiny85","ATtiny84"],
+"PIC":["PIC16F877A","PIC18F4550","PIC18F25K50"],
+"NXP":["LPC1768","LPC2148"],
+"TI":["MSP430G2553","TM4C123"],
+"Nordic":["nRF52832","nRF52840"],
+"Renesas":["RX62N","RL78"],
+"Infineon":["XMC4500","TriCore TC275"],
+"Silicon Labs":["EFM32GG","C8051F410"],
+"RP2040":["Raspberry Pi Pico"]
+}
+const LANG={
+"Arduino":["Arduino C++"],
+"ESP":["Arduino","MicroPython"],
+"STM32":["C","HAL"],
+"AVR":["C","Arduino"],
+"PIC":["C"],
+"NXP":["C"],
+"TI":["C"],
+"Nordic":["C"],
+"Renesas":["C"],
+"Infineon":["C"],
+"Silicon Labs":["C"],
+"RP2040":["MicroPython","C"]
+}
 
 const family=document.getElementById("family")
 const mcu=document.getElementById("mcu")
-const component=document.getElementById("component")
-const operation=document.getElementById("operation")
-const pin=document.getElementById("pin")
-const modules=document.getElementById("modules")
-const code=document.getElementById("code")
-const search=document.getElementById("search")
-
-/* =====================
-MCU DATABASE
-===================== */
-
-const db={
-Arduino:{mcus:["Uno","Nano","Mega","Leonardo","Due"]},
-ESP:{mcus:["ESP8266","ESP32","ESP32S2","ESP32S3"]},
-STM32:{mcus:[]},
-AVR:{mcus:[]},
-PIC:{mcus:[]},
-NXP:{mcus:[]},
-TI:{mcus:[]},
-Nordic:{mcus:[]},
-Renesas:{mcus:[]},
-Infineon:{mcus:[]},
-SiliconLabs:{mcus:[]},
-GD32:{mcus:[]}
+const lang=document.getElementById("lang")
+for(let f in MCU){let o=document.createElement("option");o.textContent=f;family.appendChild(o);}
+family.onchange=function(){
+mcu.innerHTML="";lang.innerHTML="";
+MCU[family.value].forEach(ch=>{
+let o=document.createElement("option");o.textContent=ch;mcu.appendChild(o);})
+LANG[family.value].forEach(l=>{
+let o=document.createElement("option");o.textContent=l;lang.appendChild(o);})
 }
 
-/* Generate many MCUs */
-
-for(let i=0;i<200;i++){db.AVR.mcus.push("ATmega"+(100+i))}
-for(let i=0;i<200;i++){db.PIC.mcus.push("PIC16F"+(800+i))}
-for(let i=0;i<200;i++){db.PIC.mcus.push("PIC18F"+(2000+i))}
-for(let i=0;i<300;i++){db.STM32.mcus.push("STM32F"+(100+i))}
-for(let i=0;i<120;i++){db.NXP.mcus.push("LPC"+(1000+i))}
-for(let i=0;i<120;i++){db.TI.mcus.push("MSP430"+(100+i))}
-for(let i=0;i<120;i++){db.GD32.mcus.push("GD32F"+(100+i))}
-for(let i=0;i<120;i++){db.SiliconLabs.mcus.push("EFM32"+(100+i))}
-for(let i=0;i<120;i++){db.Infineon.mcus.push("XMC"+(100+i))}
-for(let i=0;i<120;i++){db.Renesas.mcus.push("RA"+(100+i))}
-for(let i=0;i<120;i++){db.Nordic.mcus.push("nRF52"+(800+i))}
-
-/* Load families */
-
-Object.keys(db).forEach(f=>{
-let o=document.createElement("option")
-o.textContent=f
-family.appendChild(o)
-})
-
-function loadMCU(){
-
-let fam=family.value
-mcu.innerHTML=""
-
-db[fam].mcus.forEach(chip=>{
-let o=document.createElement("option")
-o.textContent=chip
-mcu.appendChild(o)
-})
-
-}
-
-family.addEventListener("change",loadMCU)
-loadMCU()
-
-/* Search */
-
-search.oninput=function(){
-
-let text=search.value.toLowerCase()
-let fam=family.value
-
-mcu.innerHTML=""
-
-db[fam].mcus.forEach(chip=>{
-if(chip.toLowerCase().includes(text)){
-let o=document.createElement("option")
-o.textContent=chip
-mcu.appendChild(o)
-}
-})
-
-}
-
-/* =====================
-COMPONENTS
-===================== */
-
+/* Components & Functions */
 const components=[
-"LED","RGB LED","Relay","Buzzer","Servo",
-"DC Motor","Stepper Motor","Motor Driver",
-"OLED Display","LCD Display","TFT Display",
-"Temperature Sensor","Humidity Sensor",
-"Pressure Sensor","Gas Sensor","Light Sensor",
-"Touch Sensor","Ultrasonic Sensor",
-"IR Sensor","Hall Sensor",
-"Accelerometer","Gyroscope","IMU",
-"GPS","Bluetooth","WiFi","LoRa",
-"SD Card","RTC Clock","Encoder",
-"Camera","Microphone"
+"💡 LED","🌈 RGB LED","🔘 Button","🔔 Buzzer","⚙ Servo","🔄 Stepper Motor","🛞 DC Motor","📟 LCD","🖥 OLED","📡 UART","🌡 Temp Sensor","💾 EEPROM","⏱ RTC"
 ]
-
-components.forEach(c=>{
-let o=document.createElement("option")
-o.textContent=c
-component.appendChild(o)
-})
-
-/* =====================
-FUNCTIONS
-===================== */
-
-const functions=[
-"Digital Write","Digital Read","Analog Read","PWM Output",
-"Toggle Output","UART Send","UART Receive",
-"I2C Read","I2C Write","SPI Transfer",
-"Interrupt Rising","Interrupt Falling",
-"Timer Delay","Timer Interrupt",
-"Servo Rotate","Motor Forward","Motor Reverse",
-"Motor Stop","Stepper Step","Stepper Rotate",
-"Sensor Read","Temperature Read","Humidity Read",
-"Pressure Read","Ultrasonic Distance",
-"GPS Read","WiFi Connect","WiFi Send Data",
-"Bluetooth Send","Bluetooth Receive",
-"SD Write","SD Read","RTC Time",
-"Encoder Read","Camera Capture","Microphone Read"
-]
-
-functions.forEach(f=>{
-let o=document.createElement("option")
-o.textContent=f
-operation.appendChild(o)
-})
+const component=document.getElementById("component")
+components.forEach(c=>{let o=document.createElement("option");o.textContent=c;component.appendChild(o);})
+const FUNC={
+"💡 LED":["ON","OFF","Toggle","PWM Brightness"],
+"🌈 RGB LED":["Set Color","Blink"],
+"🔘 Button":["Read","Interrupt"],
+"🔔 Buzzer":["Beep","Tone"],
+"⚙ Servo":["0°","90°","180°","Sweep"],
+"🔄 Stepper Motor":["Step","Direction","Speed"],
+"🛞 DC Motor":["Forward","Reverse","Stop","PWM Speed"],
+"📟 LCD":["Print Text","Clear"],
+"🖥 OLED":["Draw Pixel","Draw Text","Clear"],
+"📡 UART":["Send","Receive"],
+"🌡 Temp Sensor":["Read","Calibrate"],
+"💾 EEPROM":["Write","Read"],
+"⏱ RTC":["Set Time","Read Time"]
+}
+const func=document.getElementById("func")
+component.onchange=function(){
+func.innerHTML=""
+FUNC[component.value].forEach(f=>{
+let o=document.createElement("option");o.textContent=f;func.appendChild(o);})
+}
 
 /* Pins */
+const pin=document.getElementById("pin")
+for(let i=0;i<40;i++){let o=document.createElement("option");o.textContent=i;pin.appendChild(o);}
 
-for(let i=0;i<50;i++){
-let o=document.createElement("option")
-o.textContent=i
-pin.appendChild(o)
-}
-
-/* =====================
-MODULE STACK
-===================== */
-
-let stack=[]
-
-document.getElementById("add").onclick=function(){
-
-let m={
-component:component.value,
-func:operation.value,
-pin:pin.value
-}
-
-stack.push(m)
-render()
-
-}
-
-function render(){
-
-modules.innerHTML=""
-
-stack.forEach((m,i)=>{
-
+/* Modules */
+let list=[];const modules=document.getElementById("modules")
+function addModule(){
+list.push({c:component.value,f:func.value,p:pin.value})
 let li=document.createElement("li")
-li.textContent=`${m.component} -> ${m.func} on pin ${m.pin}`
-
-let del=document.createElement("button")
-del.textContent="X"
-
-del.onclick=function(){
-stack.splice(i,1)
-render()
-}
-
-li.appendChild(del)
+li.textContent=`${component.value} → ${func.value} (Pin ${pin.value})`
 modules.appendChild(li)
-
-})
-
 }
 
-/* =====================
-GENERATE CODE
-===================== */
-
-document.getElementById("generate").onclick=function(){
-
-let language=document.getElementById("language").value
-
-if(language==="Arduino C++"){
-
-let includes=""
-let globals=""
-let setup="void setup(){\n"
+/* Firmware code generation */
+function generate(){
+let setup="void setup(){\nSerial.begin(115200);\n"
 let loop="void loop(){\n"
-
-stack.forEach((m,i)=>{
-
-let p=m.pin
-
-if(m.func==="Digital Write"){
-setup+=` pinMode(${p},OUTPUT);\n`
-loop+=` digitalWrite(${p},HIGH);\n`
-}
-
-if(m.func==="Digital Read"){
-setup+=` pinMode(${p},INPUT);\n`
-loop+=` int val${i}=digitalRead(${p});\n`
-}
-
-if(m.func==="Analog Read"){
-loop+=` int val${i}=analogRead(${p});\n`
-}
-
-if(m.func==="PWM Output"){
-setup+=` pinMode(${p},OUTPUT);\n`
-loop+=` analogWrite(${p},128);\n`
-}
-
-if(m.func==="Servo Rotate"){
-includes+="#include <Servo.h>\n"
-globals+=`Servo servo${i};\n`
-setup+=` servo${i}.attach(${p});\n`
-loop+=` servo${i}.write(90);\n`
-}
-
+list.forEach(m=>{
+if(m.c.includes("LED")){setup+=`pinMode(${m.p},OUTPUT);\n`;loop+=`digitalWrite(${m.p},HIGH);\n`;}
+if(m.c.includes("Button")){setup+=`pinMode(${m.p},INPUT_PULLUP);\n`;loop+=`if(digitalRead(${m.p})==LOW){Serial.println("Pressed");}\n`;}
+if(m.c.includes("Servo")){setup+=`#include <Servo.h>\nServo s;\ns.attach(${m.p});\n`;loop+=`s.write(90);\n`;}
+if(m.c.includes("Buzzer")){setup+=`pinMode(${m.p},OUTPUT);\n`;loop+=`tone(${m.p},1000);\n`;}
 })
+loop+="delay(500);\n}\n";setup+="}\n"
+document.getElementById("code").value=setup+loop
+}
+function copyCode(){navigator.clipboard.writeText(document.getElementById("code").value);alert("✅ Code Copied!")}
+function clearCode(){document.getElementById("code").value="";modules.innerHTML="";list=[]}
 
-setup+="}\n\n"
-loop+="delay(1000);\n}\n"
-
-code.value=`${includes}\n${globals}\n${setup}${loop}`
-
+/* Calculators */
+const CALCS={
+"Ohm Law":["V","I","R"],
+"Power":["P","V","I"],
+"LED Resistor":["Vs","Vf","I"],
+"Capacitor Energy":["E","C","V"],
+"RC Time Constant":["Tau","R","C"],
+"Inductor Energy":["E","L","I"],
+"Voltage Divider":["Vin","Vout","R1","R2"],
+"Duty Cycle":["D","Ton","T"],
+"Efficiency":["Eff","Pout","Pin"],
+"Voltage Gain":["Av","Vout","Vin"]
+}
+const calcType=document.getElementById("calcType")
+const inputs=document.getElementById("inputs")
+for(let c in CALCS){let o=document.createElement("option");o.textContent=c;calcType.appendChild(o);}
+calcType.onchange=function(){inputs.innerHTML="";CALCS[calcType.value].forEach(v=>{inputs.innerHTML+=`${v}: <input id="${v}"><br>`})}
+function solve(){
+let vals={};CALCS[calcType.value].forEach(v=>{vals[v]=parseFloat(document.getElementById(v)?.value)||0})
+let res=""
+if(calcType.value=="Ohm Law"){if(!vals.V)vals.V=vals.I*vals.R;if(!vals.I)vals.I=vals.V/vals.R;if(!vals.R)vals.R=vals.V/vals.I;res=`V=${vals.V} I=${vals.I} R=${vals.R}`}
+else if(calcType.value=="Power"){if(!vals.P)vals.P=vals.V*vals.I;if(!vals.V)vals.V=vals.P/vals.I;if(!vals.I)vals.I=vals.P/vals.V;res=`P=${vals.P} V=${vals.V} I=${vals.I}`}
+else if(calcType.value=="LED Resistor"){if(!vals.R)vals.R=(vals.Vs-vals.Vf)/vals.I;res=`R=${vals.R} Ω`;}
+else if(calcType.value=="Capacitor Energy"){if(!vals.E)vals.E=0.5*vals.C*vals.V*vals.V;res=`E=${vals.E} J`;}
+else if(calcType.value=="RC Time Constant"){if(!vals.Tau)vals.Tau=vals.R*vals.C;res=`Tau=${vals.Tau} s`;}
+else if(calcType.value=="Inductor Energy"){if(!vals.E)vals.E=0.5*vals.L*vals.I*vals.I;res=`E=${vals.E} J`;}
+else if(calcType.value=="Voltage Divider"){if(!vals.Vout)vals.Vout=vals.Vin*vals.R2/(vals.R1+vals.R2);res=`Vout=${vals.Vout} V`;}
+else if(calcType.value=="Duty Cycle"){if(!vals.D)vals.D=vals.Ton/vals.T;res=`D=${vals.D}`;}
+else if(calcType.value=="Efficiency"){if(!vals.Eff)vals.Eff=vals.Pout/vals.Pin*100;res=`Eff=${vals.Eff} %`;}
+else if(calcType.value=="Voltage Gain"){if(!vals.Av)vals.Av=vals.Vout/vals.Vin;res=`Av=${vals.Av}`;}
+document.getElementById("result").innerText=res
 }
 
-/* MicroPython */
-
-if(language==="MicroPython"){
-
-let py="from machine import Pin\nimport time\n\n"
-
-stack.forEach((m,i)=>{
-
-if(m.func==="Digital Write"){
-py+=`led${i}=Pin(${m.pin},Pin.OUT)\n`
-py+=`led${i}.value(1)\n`
+/* Waves */
+let run=false,phase=0
+function startWave(){run=true
+let canvas=document.getElementById("scope"),ctx=canvas.getContext("2d")
+canvas.width=canvas.clientWidth
+function draw(){if(!run)return;ctx.clearRect(0,0,canvas.width,canvas.height)
+let f=parseFloat(freq.value),a=parseFloat(amp.value),type=waveType.value,center=canvas.height/2
+ctx.beginPath()
+for(let x=0;x<canvas.width;x++){let t=(x/100)+phase,y=0
+if(type=="sine")y=a*Math.sin(2*Math.PI*f*t)
+if(type=="square")y=a*(Math.sin(2*Math.PI*f*t)>0?1:-1)
+if(type=="triangle")y=a*(2*Math.asin(Math.sin(2*Math.PI*f*t))/Math.PI)
+if(type=="saw")y=a*(2*(t*f-Math.floor(0.5+t*f)))
+if(type=="noise")y=a*(Math.random()-0.5)
+y=center-y;if(x==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}
+ctx.strokeStyle="#00ffd5";ctx.stroke();phase+=0.02;requestAnimationFrame(draw)}
+draw()
 }
-
-if(m.func==="Digital Read"){
-py+=`btn${i}=Pin(${m.pin},Pin.IN)\n`
-py+=`print(btn${i}.value())\n`
-}
-
-})
-
-py+="\nwhile True:\n time.sleep(1)\n"
-
-code.value=py
-
-}
-
-}
-
-/* Download */
-
-document.getElementById("download").onclick=function(){
-
-let blob=new Blob([code.value],{type:"text/plain"})
-
-let a=document.createElement("a")
-a.href=URL.createObjectURL(blob)
-a.download="sloth_firmware.ino"
-a.click()
-
-}
-
-/* Clear */
-
-document.getElementById("clear").onclick=function(){
-
-stack=[]
-modules.innerHTML=""
-code.value=""
-
-}
-
-})
+function stopWave(){run=false}
 
 </script>
-
 </body>
 </html>
