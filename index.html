@@ -2,293 +2,850 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>🦥 SLOTH Embedded Lab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SLOTH — Embedded Development Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-body{
-margin:0;
-font-family:Consolas,monospace;
-color:#00ffd5;
-text-align:center;
-background:linear-gradient(rgba(0,0,0,0.85),rgba(0,0,0,0.9)),
-url("https://upload.wikimedia.org/wikipedia/commons/8/8f/Circuit_board_background.jpg");
-background-size:cover;
-background-attachment:fixed;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07080a;--surface:#0f1115;--surface2:#161820;--surface3:#1d1f28;
+  --border:#23262f;--border2:#2e3240;
+  --accent:#34d399;--accent-dim:rgba(52,211,153,0.1);
+  --blue:#7dd3fc;--blue-dim:rgba(125,211,252,0.1);
+  --violet:#a78bfa;--violet-dim:rgba(167,139,250,0.1);
+  --amber:#fcd34d;--red:#fb7185;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#475569;
+  --font:'Syne',sans-serif;--body:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --r:8px;--r2:14px;--tr:all 0.2s cubic-bezier(.4,0,.2,1);--sw:260px;
 }
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+::selection{background:var(--accent-dim);color:var(--accent)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
 
-h1{
-font-size:60px;
-margin-top:30px;
-text-shadow:0 0 30px #00ffd5,0 0 60px #00aaff;
+/* LAYOUT */
+.layout{display:flex;min-height:100vh}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:199;backdrop-filter:blur(2px)}
+.overlay.open{display:block}
+
+/* SIDEBAR */
+.sidebar{width:var(--sw);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:200}
+.sb-brand{padding:22px 18px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-brand-row{display:flex;align-items:center;gap:12px}
+.sb-em{font-size:30px;line-height:1}
+.sb-name{font-family:var(--font);font-size:17px;font-weight:800;letter-spacing:2px;color:var(--text)}
+.sb-tag{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;letter-spacing:1px}
+.sb-scroll{flex:1;overflow-y:auto;padding:14px 10px 0}
+.sb-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:6px 8px;font-family:var(--font)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);cursor:pointer;color:var(--text2);transition:var(--tr);font-size:13px;font-weight:500;margin-bottom:2px}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent-dim);color:var(--accent)}
+.nav-em{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:4px;background:var(--surface3);color:var(--text3);flex-shrink:0}
+.nav-item.active .nav-badge{background:var(--accent-dim);color:var(--accent)}
+.sb-div{height:1px;background:var(--border);margin:12px 10px}
+.sb-footer{padding:14px;border-top:1px solid var(--border);flex-shrink:0}
+.sys-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px}
+.sys-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.sys-row:last-child{margin-bottom:0}
+.sys-k{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.sys-v{font-size:10px;color:var(--accent);font-family:var(--mono);display:flex;align-items:center;gap:4px}
+.pulse{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{height:54px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(7,8,10,.9);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.hamburger{display:none;flex-direction:column;justify-content:center;gap:4px;width:32px;height:32px;cursor:pointer;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);padding:7px;flex-shrink:0}
+.hamburger span{display:block;height:1.5px;background:var(--text2);border-radius:2px;transition:var(--tr)}
+.tb-path{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);font-family:var(--mono)}
+.tb-sep{color:var(--border2)}
+.tb-cur{color:var(--text2)}
+.tb-pills{display:flex;align-items:center;gap:6px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:500;font-family:var(--mono);border:1px solid}
+.pill-g{background:var(--accent-dim);color:var(--accent);border-color:rgba(52,211,153,.25)}
+.pill-b{background:var(--blue-dim);color:var(--blue);border-color:rgba(125,211,252,.25)}
+
+/* CONTENT */
+.content{flex:1;overflow-x:hidden}
+.panel{display:none}.panel.active{display:block;animation:fadein .22s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* HERO */
+.hero{padding:52px 36px 44px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-100px;right:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(52,211,153,.07) 0%,transparent 70%);pointer-events:none}
+.hero-ey{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:18px;background:var(--accent-dim);border:1px solid rgba(52,211,153,.2);padding:5px 12px;border-radius:20px}
+.hero-h{font-family:var(--font);font-size:clamp(30px,5vw,56px);font-weight:800;color:var(--text);letter-spacing:-1px;line-height:1.05;margin-bottom:14px}
+.hero-h span{color:var(--accent)}
+.hero-p{font-size:15px;color:var(--text2);max-width:500px;line-height:1.75;margin-bottom:28px;font-weight:300}
+.hero-btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn-h{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:var(--r);font-family:var(--font);font-size:13px;font-weight:700;letter-spacing:.3px;cursor:pointer;transition:var(--tr);border:1px solid transparent}
+.btn-hp{background:var(--accent);color:#022c22;border-color:var(--accent)}
+.btn-hp:hover{background:#6ee7b7;transform:translateY(-1px)}
+.btn-hs{background:transparent;color:var(--text2);border-color:var(--border2)}
+.btn-hs:hover{background:var(--surface2);color:var(--text)}
+
+/* STATS */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border)}
+.stat-item{padding:20px 24px;border-right:1px solid var(--border)}
+.stat-item:last-child{border-right:none}
+.stat-em{font-size:20px;margin-bottom:6px}
+.stat-v{font-family:var(--font);font-size:26px;font-weight:800;color:var(--text);letter-spacing:-1px;line-height:1;margin-bottom:3px}
+.stat-l{font-size:11px;color:var(--text3)}
+
+/* FEATURE CARDS */
+.features{padding:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.fc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:26px 22px 22px;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden}
+.fc:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.5)}
+.fc::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at top right,var(--fg,rgba(52,211,153,.05)),transparent 60%);pointer-events:none;opacity:0;transition:.3s}
+.fc:hover::before{opacity:1}
+.fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.fc-icon{width:46px;height:46px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.fc-arrow{font-size:16px;color:var(--text3);transition:var(--tr);margin-top:4px}
+.fc:hover .fc-arrow{color:var(--accent);transform:translate(3px,-3px)}
+.fc-title{font-family:var(--font);font-size:16px;font-weight:700;color:var(--text);margin-bottom:7px}
+.fc-desc{font-size:12px;color:var(--text3);line-height:1.65}
+.fc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:14px}
+.fc-tag{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:4px;border:1px solid var(--border2);color:var(--text3)}
+
+/* PAGE */
+.pg{padding:32px 32px 48px}
+.pg-hd{margin-bottom:28px}
+.pg-ey{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:8px}
+.pg-title{font-family:var(--font);font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.3px;margin-bottom:5px}
+.pg-sub{font-size:13px;color:var(--text3);line-height:1.65;max-width:520px}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px}
+.card+.card{margin-top:18px}
+.c-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.c-title{display:flex;align-items:center;gap:7px;font-family:var(--font);font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.5px}
+
+/* FORM */
+.field{margin-bottom:13px}.field:last-child{margin-bottom:0}
+.field label{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;font-family:var(--font)}
+select,input[type="number"],input[type="text"]{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;font-family:var(--body);font-size:13px;outline:none;transition:var(--tr);-webkit-appearance:none;cursor:pointer}
+select:hover,input:hover{border-color:var(--border2)}
+select:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(52,211,153,.08)}
+select option{background:var(--surface2)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23475569'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+
+/* BUTTONS */
+.btn-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.3px;border-radius:var(--r);cursor:pointer;transition:var(--tr);outline:none;border:1px solid transparent;-webkit-tap-highlight-color:transparent}
+.btn-p{background:var(--accent);color:#022c22;border-color:var(--accent)}
+.btn-p:hover{background:#6ee7b7;transform:translateY(-1px)}
+.btn-s{background:var(--surface2);color:var(--text2);border-color:var(--border)}
+.btn-s:hover{background:var(--surface3);border-color:var(--border2);color:var(--text)}
+.btn-g{background:transparent;color:var(--text3);border-color:transparent}
+.btn-g:hover{color:var(--red);background:rgba(251,113,133,.06);border-color:rgba(251,113,133,.15)}
+
+/* MODULE LIST */
+.mod-list{min-height:80px;max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);padding:7px}
+.mod-item{display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--surface2);border-radius:6px;margin-bottom:5px;border:1px solid var(--border);animation:fadein .18s ease;font-size:12px}
+.mod-item:last-child{margin-bottom:0}
+.mod-em{font-size:16px;flex-shrink:0}
+.mod-info{flex:1;min-width:0}
+.mod-name{color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mod-fn{color:var(--text3);font-size:10px;font-family:var(--mono)}
+.mod-pin{font-size:10px;font-family:var(--mono);background:var(--surface3);color:var(--text3);padding:2px 6px;border-radius:4px;border:1px solid var(--border);flex-shrink:0}
+.mod-del{font-size:13px;cursor:pointer;color:var(--text3);padding:2px 5px;border-radius:3px;transition:var(--tr);flex-shrink:0}
+.mod-del:hover{color:var(--red)}
+.mod-cnt{font-size:9px;font-family:var(--mono);background:var(--accent-dim);color:var(--accent);border:1px solid rgba(52,211,153,.2);padding:2px 7px;border-radius:20px}
+.empty-st{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px;gap:6px}
+.empty-em{font-size:26px;opacity:.4}
+.empty-tx{font-size:11px;color:var(--text3);font-family:var(--mono)}
+
+/* CODE */
+.code-tb{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-bottom:none;border-radius:var(--r) var(--r) 0 0}
+.code-dots{display:flex;gap:5px}
+.cdot{width:10px;height:10px;border-radius:50%}
+.code-fn{font-family:var(--mono);font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px}
+textarea.code-out{width:100%;min-height:200px;background:var(--bg);color:#86efac;border:1px solid var(--border);border-radius:0 0 var(--r) var(--r);padding:14px;font-family:var(--mono);font-size:12px;line-height:1.7;resize:vertical;outline:none;display:block}
+textarea.code-out:focus{border-color:var(--accent)}
+
+/* PIN MAP */
+.pin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:5px;max-height:220px;overflow-y:auto;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r)}
+.pin-cell{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:6px 7px;text-align:center;font-family:var(--mono);font-size:10px;transition:var(--tr)}
+.pin-cell.used{background:var(--accent-dim);border-color:rgba(52,211,153,.3)}
+.pin-cell.power{background:var(--blue-dim);border-color:rgba(125,211,252,.3)}
+.pin-num{font-size:11px;font-weight:500;color:var(--text2);display:block}
+.pin-cell.used .pin-num{color:var(--accent)}
+.pin-cell.power .pin-num{color:var(--blue)}
+.pin-lbl{font-size:9px;color:var(--text3);display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* CALC */
+.calc-inputs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.formula-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--blue);line-height:1.8}
+.formula-ttl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:var(--font)}
+.res-block{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-top:18px}
+.res-hd{padding:9px 14px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);font-family:var(--font);display:flex;align-items:center;gap:6px}
+.res-row{display:flex;align-items:baseline;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border)}
+.res-row:last-child{border-bottom:none}
+.res-k{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.res-v{font-size:17px;font-weight:700;color:var(--accent);font-family:var(--mono)}
+.res-u{font-size:10px;color:var(--text3);margin-left:3px}
+.res-empty{padding:22px;display:flex;flex-direction:column;align-items:center;gap:8px}
+
+/* SCOPE */
+.scope-wrap{border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-top:18px}
+.scope-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.scope-ttl{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.scope-meta{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:10px;color:var(--text3)}
+.scope-state{display:flex;align-items:center;gap:5px}
+.scope-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);transition:var(--tr);flex-shrink:0}
+.scope-dot.live{background:var(--accent);animation:pulse .8s ease-in-out infinite}
+canvas{display:block;width:100%;height:260px;background:var(--bg);touch-action:none}
+.presets{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.preset-btn{font-size:11px;font-family:var(--mono);padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text3);cursor:pointer;transition:var(--tr)}
+.preset-btn:hover,.preset-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+
+/* CONVERTER */
+.conv-row{display:flex;align-items:baseline;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border)}
+.conv-row:last-child{border-bottom:none}
+.conv-row.active-row{background:var(--accent-dim)}
+.conv-k{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.conv-v{font-size:16px;font-weight:700;font-family:var(--mono);color:var(--text)}
+.conv-row.active-row .conv-v{color:var(--accent)}
+
+/* LEGEND */
+.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;font-family:var(--mono);color:var(--text2);margin-bottom:8px}
+.legend-swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--text2);z-index:9999;box-shadow:0 12px 40px rgba(0,0,0,.6);opacity:0;transform:translateY(10px);transition:all .25s ease;pointer-events:none;font-family:var(--mono);display:flex;align-items:center;gap:7px;max-width:280px}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;height:100vh;transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .hamburger{display:flex}
+  .stats-bar{grid-template-columns:1fr 1fr}
+  .stat-item:nth-child(2){border-right:none}
+  .stat-item:nth-child(3){border-right:1px solid var(--border);border-top:1px solid var(--border)}
+  .stat-item:nth-child(4){border-top:1px solid var(--border)}
+  .features{grid-template-columns:1fr;padding:20px}
+  .g2{grid-template-columns:1fr}
+  .g3{grid-template-columns:1fr 1fr}
+  .calc-inputs{grid-template-columns:1fr}
+  .hero{padding:36px 20px 32px}
+  .pg{padding:20px 18px 36px}
+  .topbar{padding:0 14px}
 }
-
-.menu{
-display:flex;
-justify-content:center;
-flex-wrap:wrap;
-gap:25px;
-margin-top:40px;
+@media(max-width:480px){
+  .g3{grid-template-columns:1fr}
+  .hero-h{font-size:28px}
+  .tb-pills .pill:last-child{display:none}
 }
-
-.card{
-width:200px;
-height:120px;
-border:2px solid #00ffd5;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:22px;
-cursor:pointer;
-background:rgba(0,0,0,.5);
-transition:0.3s;
-}
-.card:hover{
-box-shadow:0 0 25px #00ffd5,0 0 50px #00aaff;
-transform:scale(1.05);
-}
-
-.panel{display:none;padding:20px;}
-
-select,input,button,textarea{
-background:#000;
-color:#00ffd5;
-border:1px solid #00ffd5;
-margin:6px;
-padding:6px;
-font-size:16px;
-}
-
-textarea{width:95%;height:250px;}
-canvas{background:black;border:1px solid #00ffd5;width:900px;max-width:95%;height:380px;}
-button:hover{box-shadow:0 0 10px #00ffd5;cursor:pointer;}
-
-ul{list-style:none;padding-left:0;}
-li{margin:5px;font-size:16px;}
 </style>
 </head>
 <body>
 
-<h1>🦥 SLOTH</h1>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
-<div class="menu">
-<div class="card" onclick="show('firmware')">⚙ Firmware</div>
-<div class="card" onclick="show('calc')">📐 Calculations</div>
-<div class="card" onclick="show('waves')">🌊 Waves</div>
-</div>
+<div class="layout">
 
-<!-- FIRMWARE -->
-<div id="firmware" class="panel">
-<h2>⚙ Firmware Builder 🤖</h2>
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-brand-row">
+      <div class="sb-em">🦥</div>
+      <div><div class="sb-name">SLOTH</div><div class="sb-tag">Embedded Lab · v2.0</div></div>
+    </div>
+  </div>
+  <div class="sb-scroll">
+    <div class="sb-lbl">🗺️ Navigate</div>
+    <div class="nav-item active" onclick="nav('home',this,'🏠 Home')" id="nav-home"><span class="nav-em">🏠</span>Home</div>
+    <div class="sb-div"></div>
+    <div class="sb-lbl">🔧 Tools</div>
+    <div class="nav-item" onclick="nav('firmware',this,'⚙️ Firmware Builder')" id="nav-firmware"><span class="nav-em">⚙️</span>Firmware Builder<span class="nav-badge">12 MCUs</span></div>
+    <div class="nav-item" onclick="nav('calc',this,'📐 Calculator')" id="nav-calc"><span class="nav-em">📐</span>Calculator<span class="nav-badge">10 formulas</span></div>
+    <div class="nav-item" onclick="nav('waves',this,'🌊 Waveforms')" id="nav-waves"><span class="nav-em">🌊</span>Waveforms<span class="nav-badge">5 signals</span></div>
+    <div class="nav-item" onclick="nav('pinout',this,'📍 Pin Reference')" id="nav-pinout"><span class="nav-em">📍</span>Pin Reference<span class="nav-badge">new ✨</span></div>
+    <div class="nav-item" onclick="nav('converter',this,'🔄 Unit Converter')" id="nav-converter"><span class="nav-em">🔄</span>Unit Converter<span class="nav-badge">new ✨</span></div>
+    <div class="sb-div"></div>
+    <div class="sb-lbl">📦 More</div>
+    <div class="nav-item" style="opacity:.4;cursor:default"><span class="nav-em">📚</span>Docs <span style="font-size:10px;margin-left:4px;color:var(--text3)">(soon)</span></div>
+    <div class="nav-item" style="opacity:.4;cursor:default"><span class="nav-em">💡</span>Examples <span style="font-size:10px;margin-left:4px;color:var(--text3)">(soon)</span></div>
+  </div>
+  <div class="sb-footer">
+    <div class="sys-box">
+      <div class="sys-row"><span class="sys-k">🟢 Status</span><span class="sys-v"><span class="pulse"></span>Nominal</span></div>
+      <div class="sys-row"><span class="sys-k">🔖 Version</span><span class="sys-v">2.0.0</span></div>
+      <div class="sys-row"><span class="sys-k">🌐 Build</span><span class="sys-v">stable</span></div>
+    </div>
+  </div>
+</aside>
 
-<select id="family"></select>
-<select id="mcu"></select>
-<select id="lang"></select>
-<select id="component"></select>
-<select id="func"></select>
-<select id="pin"></select>
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></div>
+      <div class="tb-path"><span>🦥 sloth</span><span class="tb-sep">/</span><span class="tb-cur" id="breadcrumb">home</span></div>
+    </div>
+    <div class="tb-pills">
+      <span class="pill pill-g">🟢 Live</span>
+      <span class="pill pill-b">🔵 Platform</span>
+    </div>
+  </header>
 
-<br>
-<button onclick="addModule()">➕ Add Module</button>
-<button onclick="generate()">⚡ Generate Code</button>
-<button onclick="copyCode()">📋 Copy</button>
-<button onclick="clearCode()">🧹 Clear</button>
+  <div class="content">
 
-<ul id="modules"></ul>
-<textarea id="code"></textarea>
-<br>
-<button onclick="home()">🏠 Home</button>
-</div>
+    <!-- HOME -->
+    <div id="home-panel" class="panel active">
+      <div class="hero">
+        <div class="hero-ey">🦥 Slow Lab Of Things Hardware</div>
+        <h1 class="hero-h">Build firmware.<br><span>Ship faster.</span></h1>
+        <p class="hero-p">SLOTH is an all-in-one embedded dev platform — firmware generation ⚙️, engineering calculators 📐, real-time signals 🌊, pin references 📍 and unit conversion 🔄. Built for engineers who move deliberately.</p>
+        <div class="hero-btns">
+          <button class="btn-h btn-hp" onclick="nav('firmware',document.getElementById('nav-firmware'),'⚙️ Firmware Builder')">⚙️ Start Building</button>
+          <button class="btn-h btn-hs" onclick="nav('calc',document.getElementById('nav-calc'),'📐 Calculator')">📐 Open Calculator</button>
+        </div>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item"><div class="stat-em">🧠</div><div class="stat-v">12</div><div class="stat-l">MCU Families</div></div>
+        <div class="stat-item"><div class="stat-em">🧩</div><div class="stat-v">13</div><div class="stat-l">Components</div></div>
+        <div class="stat-item"><div class="stat-em">⚗️</div><div class="stat-v">10</div><div class="stat-l">Calculators</div></div>
+        <div class="stat-item"><div class="stat-em">📡</div><div class="stat-v">5</div><div class="stat-l">Signal Types</div></div>
+      </div>
+      <div class="features">
+        <div class="fc" style="--fg:rgba(52,211,153,.06)" onclick="nav('firmware',document.getElementById('nav-firmware'),'⚙️ Firmware Builder')">
+          <div class="fc-top"><div class="fc-icon" style="background:rgba(52,211,153,.1)">⚙️</div><div class="fc-arrow">↗</div></div>
+          <div class="fc-title">Firmware Builder</div>
+          <div class="fc-desc">Select MCU, queue component modules, generate clean boilerplate. No more copy-pasting from Stack Overflow 🙅</div>
+          <div class="fc-tags"><span class="fc-tag">🔌 Arduino</span><span class="fc-tag">🔥 ESP32</span><span class="fc-tag">⚡ STM32</span><span class="fc-tag">+ 9 more</span></div>
+        </div>
+        <div class="fc" style="--fg:rgba(125,211,252,.06)" onclick="nav('calc',document.getElementById('nav-calc'),'📐 Calculator')">
+          <div class="fc-top"><div class="fc-icon" style="background:rgba(125,211,252,.1)">📐</div><div class="fc-arrow">↗</div></div>
+          <div class="fc-title">Engineering Calculator</div>
+          <div class="fc-desc">Leave any field blank and let SLOTH solve it 🤓. Formula reference included for every calculation type.</div>
+          <div class="fc-tags"><span class="fc-tag">⚡ Ohm's Law</span><span class="fc-tag">🔋 Power</span><span class="fc-tag">⏱️ RC Tau</span><span class="fc-tag">+ 7 more</span></div>
+        </div>
+        <div class="fc" style="--fg:rgba(167,139,250,.06)" onclick="nav('waves',document.getElementById('nav-waves'),'🌊 Waveforms')">
+          <div class="fc-top"><div class="fc-icon" style="background:rgba(167,139,250,.1)">🌊</div><div class="fc-arrow">↗</div></div>
+          <div class="fc-title">Waveform Generator</div>
+          <div class="fc-desc">Real-time oscilloscope with presets 🎛️. Sine, square, triangle, sawtooth, noise — live in your browser 📺</div>
+          <div class="fc-tags"><span class="fc-tag">〰️ Sine</span><span class="fc-tag">⬜ Square</span><span class="fc-tag">🔺 Triangle</span><span class="fc-tag">📈 Saw</span></div>
+        </div>
+        <div class="fc" style="--fg:rgba(252,211,77,.06)" onclick="nav('pinout',document.getElementById('nav-pinout'),'📍 Pin Reference')">
+          <div class="fc-top"><div class="fc-icon" style="background:rgba(252,211,77,.1)">📍</div><div class="fc-arrow">↗</div></div>
+          <div class="fc-title">Pin Reference ✨</div>
+          <div class="fc-desc">Visual pin map for popular MCUs 🗺️. Highlights used pins from your firmware queue — no double-assigns 🚫</div>
+          <div class="fc-tags"><span class="fc-tag">🔌 Arduino</span><span class="fc-tag">🔥 ESP32</span><span class="fc-tag">🍓 Pico</span></div>
+        </div>
+        <div class="fc" style="--fg:rgba(251,113,133,.06)" onclick="nav('converter',document.getElementById('nav-converter'),'🔄 Unit Converter')">
+          <div class="fc-top"><div class="fc-icon" style="background:rgba(251,113,133,.1)">🔄</div><div class="fc-arrow">↗</div></div>
+          <div class="fc-title">Unit Converter ✨</div>
+          <div class="fc-desc">Convert resistance, capacitance, frequency, voltage and more ⚡. Your essential bench quick-reference 🔬</div>
+          <div class="fc-tags"><span class="fc-tag">Ω Resistance</span><span class="fc-tag">F Capacitance</span><span class="fc-tag">Hz Frequency</span></div>
+        </div>
+      </div>
+    </div>
 
-<!-- CALCULATIONS -->
-<div id="calc" class="panel">
-<h2>📐 Engineering Calculations</h2>
-<select id="calcType"></select>
-<div id="inputs"></div>
-<button onclick="solve()">⚡ Solve</button>
-<h3 id="result"></h3>
-<button onclick="home()">🏠 Home</button>
-</div>
+    <!-- FIRMWARE -->
+    <div id="firmware-panel" class="panel">
+      <div class="pg">
+        <div class="pg-hd">
+          <div class="pg-ey">⚙️ Tool</div>
+          <div class="pg-title">Firmware Builder</div>
+          <div class="pg-sub">Pick your MCU 🧠, queue up components 🧩, generate code ✨ — and watch your pin map update live 📍</div>
+        </div>
+        <div class="g2">
+          <div>
+            <div class="card">
+              <div class="c-hd"><div class="c-title">🎯 Target Configuration</div></div>
+              <div class="field"><label>🧠 MCU Family</label><select id="family"></select></div>
+              <div class="field"><label>🔌 Microcontroller</label><select id="mcu"></select></div>
+              <div class="field"><label>💬 Language</label><select id="lang"></select></div>
+            </div>
+            <div class="card">
+              <div class="c-hd"><div class="c-title">🧩 Add Module</div></div>
+              <div class="field"><label>🔧 Component</label><select id="component"></select></div>
+              <div class="field"><label>⚡ Function</label><select id="func"></select></div>
+              <div class="field"><label>📍 Pin</label><select id="pin"></select></div>
+              <div class="btn-row"><button class="btn-p" onclick="addModule()">➕ Add Module</button></div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="c-hd">
+                <div class="c-title">📋 Module Queue</div>
+                <span class="mod-cnt" id="mod-count">0 modules</span>
+              </div>
+              <div class="mod-list" id="modules">
+                <div class="empty-st"><div class="empty-em">🗂️</div><div class="empty-tx">No modules queued yet</div></div>
+              </div>
+              <div style="margin-top:14px">
+                <div class="c-hd" style="margin-bottom:10px"><div class="c-title">📍 Live Pin Map</div></div>
+                <div class="pin-grid" id="pinout-grid"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="c-hd"><div class="c-title">🖥️ Generated Code</div></div>
+              <div class="code-tb">
+                <div class="code-dots"><div class="cdot" style="background:#fb7185"></div><div class="cdot" style="background:#fcd34d"></div><div class="cdot" style="background:#34d399"></div></div>
+                <div class="code-fn">📄 <span id="code-lang-label">firmware.ino</span></div>
+              </div>
+              <textarea class="code-out" id="code" readonly placeholder="// Hit ⚡ Generate to see your code here..."></textarea>
+              <div class="btn-row">
+                <button class="btn-p" onclick="generate()">⚡ Generate</button>
+                <button class="btn-s" onclick="copyCode()">📋 Copy</button>
+                <button class="btn-g" onclick="clearCode()">🗑️ Clear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<!-- WAVES -->
-<div id="waves" class="panel">
-<h2>🌊 Wave Generator</h2>
-<select id="waveType">
-<option>sine</option>
-<option>square</option>
-<option>triangle</option>
-<option>saw</option>
-<option>noise</option>
-</select>
-<input id="freq" type="number" value="1">
-<input id="amp" type="number" value="80">
-<button onclick="startWave()">▶ Start</button>
-<button onclick="stopWave()">⏸ Stop</button>
-<br><br>
-<canvas id="scope"></canvas>
-<br>
-<button onclick="home()">🏠 Home</button>
-</div>
+    <!-- CALC -->
+    <div id="calc-panel" class="panel">
+      <div class="pg">
+        <div class="pg-hd">
+          <div class="pg-ey">📐 Tool</div>
+          <div class="pg-title">Engineering Calculator</div>
+          <div class="pg-sub">Leave any one field blank 🤫 — SLOTH solves for it. Formula reference shown for every type ✨</div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="c-hd"><div class="c-title">🔬 Formula</div></div>
+            <div class="field"><label>📖 Calculation Type</label><select id="calcType"></select></div>
+            <div id="formula-ref" class="formula-box"></div>
+            <div class="c-hd" style="margin-top:18px"><div class="c-title">🔢 Parameters</div></div>
+            <div class="calc-inputs" id="calc-inputs"></div>
+            <div class="btn-row" style="margin-top:18px">
+              <button class="btn-p" onclick="solve()">⚡ Solve</button>
+              <button class="btn-g" onclick="clearCalc()">🔄 Reset</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="c-hd"><div class="c-title">📊 Result</div></div>
+            <div id="result-placeholder" class="res-empty"><div style="font-size:32px">🧮</div><div style="font-size:12px;color:var(--text3);font-family:var(--mono)">Run a calculation to see output</div></div>
+            <div id="result-rows" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WAVES -->
+    <div id="waves-panel" class="panel">
+      <div class="pg">
+        <div class="pg-hd">
+          <div class="pg-ey">🌊 Tool</div>
+          <div class="pg-title">Waveform Generator</div>
+          <div class="pg-sub">Dial in your signal 🎛️ and watch it live on the scope 📺. Use presets for instant setup ⚡</div>
+        </div>
+        <div class="card">
+          <div class="c-hd"><div class="c-title">🎛️ Signal Parameters</div></div>
+          <div class="g3">
+            <div class="field"><label>〰️ Waveform</label>
+              <select id="waveType">
+                <option value="sine">〰️ Sine</option>
+                <option value="square">⬜ Square</option>
+                <option value="triangle">🔺 Triangle</option>
+                <option value="saw">📈 Sawtooth</option>
+                <option value="noise">🎲 Noise</option>
+              </select>
+            </div>
+            <div class="field"><label>🔁 Frequency (Hz)</label><input id="freq" type="number" value="1" min="0.1" max="20" step="0.1"></div>
+            <div class="field"><label>📶 Amplitude</label><input id="amp" type="number" value="80" min="10" max="140" step="5"></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn-p" onclick="startWave()">▶️ Start</button>
+            <button class="btn-s" onclick="stopWave()">⏸️ Stop</button>
+          </div>
+          <div style="margin-top:14px">
+            <div class="c-hd" style="margin-bottom:8px"><div class="c-title">⚡ Quick Presets</div></div>
+            <div class="presets" id="presets">
+              <div class="preset-btn" onclick="applyPreset(this,'sine',1,80)">〰️ 1Hz Sine</div>
+              <div class="preset-btn" onclick="applyPreset(this,'square',5,100)">⬜ 5Hz Square</div>
+              <div class="preset-btn" onclick="applyPreset(this,'triangle',2,60)">🔺 2Hz Triangle</div>
+              <div class="preset-btn" onclick="applyPreset(this,'saw',3,90)">📈 3Hz Saw</div>
+              <div class="preset-btn" onclick="applyPreset(this,'noise',1,50)">🎲 Noise</div>
+              <div class="preset-btn" onclick="applyPreset(this,'sine',10,120)">🚀 10Hz Burst</div>
+            </div>
+          </div>
+        </div>
+        <div class="scope-wrap">
+          <div class="scope-bar">
+            <div class="scope-ttl">📺 CH1 — Live Oscilloscope</div>
+            <div class="scope-meta">
+              <span id="scope-freq-label" style="color:var(--accent);font-size:10px;font-family:var(--mono)"></span>
+              <div class="scope-state"><div class="scope-dot" id="scope-led"></div><span id="scope-status">⏸️ Idle</span></div>
+            </div>
+          </div>
+          <canvas id="scope"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIN REFERENCE -->
+    <div id="pinout-panel" class="panel">
+      <div class="pg">
+        <div class="pg-hd">
+          <div class="pg-ey">📍 Tool</div>
+          <div class="pg-title">Pin Reference</div>
+          <div class="pg-sub">Visual pin maps for popular MCUs 🗺️. Green pins are in use from your firmware queue 🟢</div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="c-hd"><div class="c-title">🔌 Select Board</div></div>
+            <div class="field"><label>🧠 Board</label>
+              <select id="pinout-board" onchange="renderPinRef()">
+                <option value="uno">🔌 Arduino Uno</option>
+                <option value="nano">🔌 Arduino Nano</option>
+                <option value="mega">🔌 Arduino Mega</option>
+                <option value="esp32">🔥 ESP32 DevKit</option>
+                <option value="esp8266">🔥 ESP8266 NodeMCU</option>
+                <option value="pico">🍓 Raspberry Pi Pico</option>
+              </select>
+            </div>
+            <div id="pin-ref-grid" class="pin-grid" style="margin-top:14px;max-height:400px"></div>
+          </div>
+          <div class="card">
+            <div class="c-hd"><div class="c-title">📋 Legend</div></div>
+            <div class="legend-item"><div class="legend-swatch" style="background:var(--accent-dim);border:1px solid rgba(52,211,153,.3)"></div>Used in firmware queue</div>
+            <div class="legend-item"><div class="legend-swatch" style="background:var(--surface2);border:1px solid var(--border)"></div>Available / Free</div>
+            <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-dim);border:1px solid rgba(125,211,252,.3)"></div>Analog / Special</div>
+            <div class="c-hd" style="margin-top:20px"><div class="c-title">📊 Board Specs</div></div>
+            <div id="board-specs" style="font-size:12px;font-family:var(--mono);color:var(--text2);line-height:2.2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UNIT CONVERTER -->
+    <div id="converter-panel" class="panel">
+      <div class="pg">
+        <div class="pg-hd">
+          <div class="pg-ey">🔄 Tool</div>
+          <div class="pg-title">Unit Converter</div>
+          <div class="pg-sub">All essential electronics unit conversions ⚡ — type a value and see every unit instantly 🎯</div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="c-hd"><div class="c-title">🔧 Settings</div></div>
+            <div class="field"><label>📦 Category</label>
+              <select id="conv-type" onchange="renderConverter()">
+                <option value="resistance">Ω Resistance</option>
+                <option value="capacitance">F Capacitance</option>
+                <option value="frequency">Hz Frequency</option>
+                <option value="voltage">V Voltage</option>
+                <option value="current">A Current</option>
+                <option value="power">W Power</option>
+                <option value="inductance">H Inductance</option>
+                <option value="time">⏱️ Time</option>
+              </select>
+            </div>
+            <div class="field"><label id="conv-from-label">🔢 Value</label><input type="number" id="conv-val" placeholder="Enter value..." oninput="doConvert()"></div>
+            <div class="field"><label>📐 From Unit</label><select id="conv-from" onchange="doConvert()"></select></div>
+            <div style="margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:11px;color:var(--text3);font-family:var(--mono);line-height:1.8" id="conv-tip"></div>
+          </div>
+          <div class="card">
+            <div class="c-hd"><div class="c-title">📊 All Conversions</div></div>
+            <div id="conv-results">
+              <div class="res-empty"><div style="font-size:32px">🔄</div><div style="font-size:12px;color:var(--text3);font-family:var(--mono)">Enter a value to convert</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<div class="toast" id="toast"><span id="toast-icon">✅</span><span id="toast-msg"></span></div>
 
 <script>
-function show(id){
-document.querySelectorAll(".panel").forEach(p=>p.style.display="none")
-document.getElementById(id).style.display="block"
-}
-function home(){
-document.querySelectorAll(".panel").forEach(p=>p.style.display="none")
+/* ── NAV ── */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
+function nav(id,navEl,label){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(id+'-panel').classList.add('active');
+  if(navEl)navEl.classList.add('active');
+  document.getElementById('breadcrumb').textContent=label||id;
+  if(window.innerWidth<=768)closeSidebar();
 }
 
-/* MCU & Languages */
+/* ── TOAST ── */
+function toast(msg,icon='✅'){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  document.getElementById('toast-icon').textContent=icon;
+  t.classList.add('show');clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* ── MCU DATA ── */
 const MCU={
-"Arduino":["Uno","Nano","Mega","Leonardo","Due","Nano Every"],
-"ESP":["ESP8266","ESP32","ESP32-S2","ESP32-S3","ESP32-C3"],
-"STM32":["STM32F030","STM32F103","STM32F407","STM32F429"],
-"AVR":["ATmega328","ATmega2560","ATtiny85","ATtiny84"],
-"PIC":["PIC16F877A","PIC18F4550","PIC18F25K50"],
-"NXP":["LPC1768","LPC2148"],
-"TI":["MSP430G2553","TM4C123"],
-"Nordic":["nRF52832","nRF52840"],
-"Renesas":["RX62N","RL78"],
-"Infineon":["XMC4500","TriCore TC275"],
-"Silicon Labs":["EFM32GG","C8051F410"],
-"RP2040":["Raspberry Pi Pico"]
-}
-const LANG={
-"Arduino":["Arduino C++"],
-"ESP":["Arduino","MicroPython"],
-"STM32":["C","HAL"],
-"AVR":["C","Arduino"],
-"PIC":["C"],
-"NXP":["C"],
-"TI":["C"],
-"Nordic":["C"],
-"Renesas":["C"],
-"Infineon":["C"],
-"Silicon Labs":["C"],
-"RP2040":["MicroPython","C"]
-}
+  "Arduino":["Uno","Nano","Mega","Leonardo","Due","Nano Every"],
+  "ESP":["ESP8266","ESP32","ESP32-S2","ESP32-S3","ESP32-C3"],
+  "STM32":["STM32F030","STM32F103","STM32F407","STM32F429"],
+  "AVR":["ATmega328","ATmega2560","ATtiny85","ATtiny84"],
+  "PIC":["PIC16F877A","PIC18F4550","PIC18F25K50"],
+  "NXP":["LPC1768","LPC2148"],"TI":["MSP430G2553","TM4C123"],
+  "Nordic":["nRF52832","nRF52840"],"Renesas":["RX62N","RL78"],
+  "Infineon":["XMC4500","TriCore TC275"],
+  "Silicon Labs":["EFM32GG","C8051F410"],"RP2040":["Raspberry Pi Pico"]
+};
+const LANG={"Arduino":["arduino"],"ESP":["arduino","micropython"],"STM32":["c","hal"],"AVR":["c","arduino"],"PIC":["c"],"NXP":["c"],"TI":["c"],"Nordic":["c"],"Renesas":["c"],"Infineon":["c"],"Silicon Labs":["c"],"RP2040":["micropython","c"]};
+const fSel=document.getElementById('family'),mSel=document.getElementById('mcu'),lSel=document.getElementById('lang');
+function fill(el,arr){el.innerHTML='';arr.forEach(v=>{const o=document.createElement('option');o.textContent=v;el.appendChild(o);});}
+for(const f in MCU){const o=document.createElement('option');o.textContent=f;fSel.appendChild(o);}
+function onFamily(){const f=fSel.value;fill(mSel,MCU[f]);fill(lSel,LANG[f]);updateCodeLang();}
+function updateCodeLang(){const l=lSel.value;document.getElementById('code-lang-label').textContent=l==='micropython'?'firmware.py':l==='arduino'?'firmware.ino':'firmware.c';}
+fSel.addEventListener('change',onFamily);lSel.addEventListener('change',updateCodeLang);
+onFamily();
 
-const family=document.getElementById("family")
-const mcu=document.getElementById("mcu")
-const lang=document.getElementById("lang")
-for(let f in MCU){let o=document.createElement("option");o.textContent=f;family.appendChild(o);}
-family.onchange=function(){
-mcu.innerHTML="";lang.innerHTML="";
-MCU[family.value].forEach(ch=>{
-let o=document.createElement("option");o.textContent=ch;mcu.appendChild(o);})
-LANG[family.value].forEach(l=>{
-let o=document.createElement("option");o.textContent=l;lang.appendChild(o);})
-}
+/* ── COMPONENTS ── */
+const CEMOJI={"LED":"💡","RGB LED":"🌈","Button":"🔘","Buzzer":"🔔","Servo":"⚙️","Stepper Motor":"🔄","DC Motor":"🛞","LCD":"📟","OLED":"🖥️","UART":"📡","Temp Sensor":"🌡️","EEPROM":"💾","RTC":"⏱️"};
+const COMPS=Object.keys(CEMOJI);
+const FUNC={"LED":["ON","OFF","Toggle","PWM Brightness"],"RGB LED":["Set Color","Blink"],"Button":["Read","Interrupt"],"Buzzer":["Beep","Tone"],"Servo":["0°","90°","180°","Sweep"],"Stepper Motor":["Step","Direction","Speed"],"DC Motor":["Forward","Reverse","Stop","PWM Speed"],"LCD":["Print Text","Clear"],"OLED":["Draw Pixel","Draw Text","Clear"],"UART":["Send","Receive"],"Temp Sensor":["Read","Calibrate"],"EEPROM":["Write","Read"],"RTC":["Set Time","Read Time"]};
+const cSel=document.getElementById('component'),fnSel=document.getElementById('func'),pSel=document.getElementById('pin');
+fill(cSel,COMPS.map(c=>CEMOJI[c]+' '+c));
+function onComp(){fill(fnSel,FUNC[COMPS[cSel.selectedIndex]]||[]);}
+cSel.addEventListener('change',onComp);onComp();
+for(let i=0;i<40;i++){const o=document.createElement('option');o.textContent='Pin '+i;pSel.appendChild(o);}
 
-/* Components & Functions */
-const components=[
-"💡 LED","🌈 RGB LED","🔘 Button","🔔 Buzzer","⚙ Servo","🔄 Stepper Motor","🛞 DC Motor","📟 LCD","🖥 OLED","📡 UART","🌡 Temp Sensor","💾 EEPROM","⏱ RTC"
-]
-const component=document.getElementById("component")
-components.forEach(c=>{let o=document.createElement("option");o.textContent=c;component.appendChild(o);})
-const FUNC={
-"💡 LED":["ON","OFF","Toggle","PWM Brightness"],
-"🌈 RGB LED":["Set Color","Blink"],
-"🔘 Button":["Read","Interrupt"],
-"🔔 Buzzer":["Beep","Tone"],
-"⚙ Servo":["0°","90°","180°","Sweep"],
-"🔄 Stepper Motor":["Step","Direction","Speed"],
-"🛞 DC Motor":["Forward","Reverse","Stop","PWM Speed"],
-"📟 LCD":["Print Text","Clear"],
-"🖥 OLED":["Draw Pixel","Draw Text","Clear"],
-"📡 UART":["Send","Receive"],
-"🌡 Temp Sensor":["Read","Calibrate"],
-"💾 EEPROM":["Write","Read"],
-"⏱ RTC":["Set Time","Read Time"]
+/* ── MODULES ── */
+let mods=[];
+function updateCount(){document.getElementById('mod-count').textContent=mods.length+' module'+(mods.length!==1?'s':'');}
+function updatePinMap(){
+  const g=document.getElementById('pinout-grid');
+  const used=new Set(mods.map(m=>parseInt(m.p.replace('Pin ',''))));
+  g.innerHTML='';
+  for(let i=0;i<40;i++){
+    const c=document.createElement('div');
+    const m=mods.find(x=>parseInt(x.p.replace('Pin ',''))===i);
+    c.className='pin-cell'+(m?' used':'');
+    c.innerHTML=`<span class="pin-num">P${i}</span><span class="pin-lbl">${m?m.e+' '+m.c.slice(0,6):'free'}</span>`;
+    g.appendChild(c);
+  }
 }
-const func=document.getElementById("func")
-component.onchange=function(){
-func.innerHTML=""
-FUNC[component.value].forEach(f=>{
-let o=document.createElement("option");o.textContent=f;func.appendChild(o);})
-}
-
-/* Pins */
-const pin=document.getElementById("pin")
-for(let i=0;i<40;i++){let o=document.createElement("option");o.textContent=i;pin.appendChild(o);}
-
-/* Modules */
-let list=[];const modules=document.getElementById("modules")
 function addModule(){
-list.push({c:component.value,f:func.value,p:pin.value})
-let li=document.createElement("li")
-li.textContent=`${component.value} → ${func.value} (Pin ${pin.value})`
-modules.appendChild(li)
+  const idx=cSel.selectedIndex,compName=COMPS[idx],emoji=CEMOJI[compName],fn=fnSel.value,pin=pSel.options[pSel.selectedIndex].textContent;
+  const pinNum=parseInt(pin.replace('Pin ',''));
+  if(mods.find(m=>parseInt(m.p.replace('Pin ',''))===pinNum)){toast('Pin '+pinNum+' already used! 🚫','⚠️');return;}
+  const i=mods.push({c:compName,f:fn,p:pin,e:emoji})-1;
+  const el=document.getElementById('modules');
+  if(el.querySelector('.empty-st'))el.innerHTML='';
+  const item=document.createElement('div');item.className='mod-item';
+  item.innerHTML=`<span class="mod-em">${emoji}</span><div class="mod-info"><div class="mod-name">${compName}</div><div class="mod-fn">${fn}</div></div><span class="mod-pin">${pin}</span><span class="mod-del" data-i="${i}" onclick="removeModule(this)">✕</span>`;
+  el.appendChild(item);updateCount();updatePinMap();toast(emoji+' '+compName+' added!');
+}
+function removeModule(btn){
+  const i=parseInt(btn.dataset.i);mods.splice(i,1);btn.parentElement.remove();
+  document.querySelectorAll('.mod-del').forEach((b,j)=>b.dataset.i=j);
+  if(!mods.length){document.getElementById('modules').innerHTML='<div class="empty-st"><div class="empty-em">🗂️</div><div class="empty-tx">No modules queued yet</div></div>';}
+  updateCount();updatePinMap();toast('Module removed 🗑️','🗑️');
 }
 
-/* Firmware code generation */
+/* ── CODE GEN ── */
 function generate(){
-let setup="void setup(){\nSerial.begin(115200);\n"
-let loop="void loop(){\n"
-list.forEach(m=>{
-if(m.c.includes("LED")){setup+=`pinMode(${m.p},OUTPUT);\n`;loop+=`digitalWrite(${m.p},HIGH);\n`;}
-if(m.c.includes("Button")){setup+=`pinMode(${m.p},INPUT_PULLUP);\n`;loop+=`if(digitalRead(${m.p})==LOW){Serial.println("Pressed");}\n`;}
-if(m.c.includes("Servo")){setup+=`#include <Servo.h>\nServo s;\ns.attach(${m.p});\n`;loop+=`s.write(90);\n`;}
-if(m.c.includes("Buzzer")){setup+=`pinMode(${m.p},OUTPUT);\n`;loop+=`tone(${m.p},1000);\n`;}
-})
-loop+="delay(500);\n}\n";setup+="}\n"
-document.getElementById("code").value=setup+loop
+  if(!mods.length){toast('Add a module first 🧩','⚠️');return;}
+  const target=mSel.value,lang=lSel.value;
+  let inc='',globals='',setup='\nvoid setup() {\n  Serial.begin(115200);\n',loop='\nvoid loop() {\n';
+  if(mods.some(m=>m.c==='Servo')){inc+='#include <Servo.h>\n';mods.filter(m=>m.c==='Servo').forEach(m=>globals+=`Servo servo_${m.p.replace('Pin ','')};\n`);}
+  if(mods.some(m=>m.c==='LCD'))inc+='#include <LiquidCrystal.h>\n';
+  if(mods.some(m=>m.c==='OLED'))inc+='#include <Adafruit_SSD1306.h>\n';
+  if(mods.some(m=>m.c==='EEPROM'))inc+='#include <EEPROM.h>\n';
+  if(mods.some(m=>m.c==='RTC'))inc+='#include <RTClib.h>\n';
+  mods.forEach(m=>{
+    const p=m.p.replace('Pin ','');
+    if(m.c==='LED'||m.c==='RGB LED'){setup+=`  pinMode(${p}, OUTPUT);  // ${m.e} ${m.c}\n`;loop+=`  digitalWrite(${p}, HIGH);  // ${m.f}\n`;}
+    if(m.c==='Button'){setup+=`  pinMode(${p}, INPUT_PULLUP);  // ${m.e} Button\n`;loop+=`  if (digitalRead(${p}) == LOW) {\n    Serial.println("🔘 Button pressed on pin ${p}");\n  }\n`;}
+    if(m.c==='Servo'){setup+=`  servo_${p}.attach(${p});  // ${m.e} Servo\n`;loop+=`  servo_${p}.write(90);\n  delay(1000);\n  servo_${p}.write(0);\n  delay(1000);\n`;}
+    if(m.c==='Buzzer'){setup+=`  pinMode(${p}, OUTPUT);  // ${m.e} Buzzer\n`;loop+=`  tone(${p}, 1000, 200);\n`;}
+    if(m.c==='LCD'){setup+=`  // lcd.begin(16, 2);\n`;loop+=`  // lcd.setCursor(0, 0);\n  // lcd.print("🦥 SLOTH v2");\n`;}
+    if(m.c==='OLED'){setup+=`  // display.begin(SSD1306_SWITCHCAPVCC, 0x3C);\n  // display.clearDisplay();\n`;loop+=`  // display.println("🦥 SLOTH");\n  // display.display();\n`;}
+    if(m.c==='UART'){loop+=`  Serial.println("📡 SLOTH TX — ${m.f}");\n`;}
+    if(m.c==='Temp Sensor'){loop+=`  // float temp = analogRead(${p}) * (5.0 / 1023.0) * 100;\n  // Serial.println("🌡️ Temp: " + String(temp) + "°C");\n`;}
+    if(m.c==='EEPROM'){if(m.f==='Write')loop+=`  EEPROM.write(0, 42);  // 💾 Write\n`;else loop+=`  byte val = EEPROM.read(0);  // 💾 Read\n`;}
+    if(m.c==='RTC'){if(m.f==='Set Time')loop+=`  // rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));\n`;else loop+=`  // DateTime now = rtc.now();\n  // Serial.println(now.timestamp());\n`;}
+    if(m.c==='DC Motor'){setup+=`  pinMode(${p}, OUTPUT);\n`;loop+=`  analogWrite(${p}, 200);  // 🛞 ${m.f}\n`;}
+    if(m.c==='Stepper Motor'){setup+=`  // Stepper stepper(200, ${p}, ${parseInt(p)+1});\n`;loop+=`  // stepper.step(100);  // 🔄 ${m.f}\n`;}
+  });
+  loop+='  delay(500);\n}';setup+='}';
+  const header=`// 🦥 SLOTH — Generated Firmware\n// 🎯 Target  : ${target}\n// 💬 Language: ${lang}\n// 🧩 Modules : ${mods.length}\n// 📅 Generated: ${new Date().toLocaleString()}\n// ──────────────────────────────────\n\n`;
+  document.getElementById('code').value=header+(inc?inc+'\n':'')+(globals?globals+'\n':'')+setup+loop;
+  toast('Code generated! ✨');
 }
-function copyCode(){navigator.clipboard.writeText(document.getElementById("code").value);alert("✅ Code Copied!")}
-function clearCode(){document.getElementById("code").value="";modules.innerHTML="";list=[]}
+function copyCode(){const v=document.getElementById('code').value;if(!v){toast('Nothing to copy yet 📋','⚠️');return;}navigator.clipboard.writeText(v).then(()=>toast('Copied! 📋'));}
+function clearCode(){document.getElementById('code').value='';document.getElementById('modules').innerHTML='<div class="empty-st"><div class="empty-em">🗂️</div><div class="empty-tx">No modules queued yet</div></div>';mods=[];updateCount();updatePinMap();toast('Workspace cleared 🧹','🗑️');}
+updatePinMap();
 
-/* Calculators */
+/* ── CALCULATOR ── */
 const CALCS={
-"Ohm Law":["V","I","R"],
-"Power":["P","V","I"],
-"LED Resistor":["Vs","Vf","I"],
-"Capacitor Energy":["E","C","V"],
-"RC Time Constant":["Tau","R","C"],
-"Inductor Energy":["E","L","I"],
-"Voltage Divider":["Vin","Vout","R1","R2"],
-"Duty Cycle":["D","Ton","T"],
-"Efficiency":["Eff","Pout","Pin"],
-"Voltage Gain":["Av","Vout","Vin"]
+  "⚡ Ohm's Law":{f:[["V","Voltage (V)"],["I","Current (A)"],["R","Resistance (Ω)"]],formula:"V = I × R",desc:"Leave one field blank to solve"},
+  "🔋 Power":{f:[["P","Power (W)"],["V","Voltage (V)"],["I","Current (A)"]],formula:"P = V × I",desc:"Leave one field blank to solve"},
+  "💡 LED Resistor":{f:[["Vs","Supply V"],["Vf","Forward V"],["I","Current (A)"]],formula:"R = (Vs − Vf) / I",desc:"Fill all three fields"},
+  "🔵 Capacitor Energy":{f:[["E","Energy (J)"],["C","Capacitance (F)"],["V","Voltage (V)"]],formula:"E = ½ × C × V²",desc:"Leave E blank to solve"},
+  "⏱️ RC Time Constant":{f:[["Tau","τ (seconds)"],["R","Resistance (Ω)"],["C","Capacitance (F)"]],formula:"τ = R × C",desc:"Leave τ blank to solve"},
+  "🌀 Inductor Energy":{f:[["E","Energy (J)"],["L","Inductance (H)"],["I","Current (A)"]],formula:"E = ½ × L × I²",desc:"Leave E blank to solve"},
+  "🔀 Voltage Divider":{f:[["Vin","Input V"],["Vout","Output V"],["R1","R1 (Ω)"],["R2","R2 (Ω)"]],formula:"Vout = Vin × R2 / (R1 + R2)",desc:"Leave Vout blank to solve"},
+  "📊 Duty Cycle":{f:[["D","Duty ratio"],["Ton","On-time (s)"],["T","Period (s)"]],formula:"D = Ton / T",desc:"Leave D blank to solve"},
+  "✅ Efficiency":{f:[["Eff","Efficiency (%)"],["Pout","Output W"],["Pin","Input W"]],formula:"η = (Pout / Pin) × 100",desc:"Leave Eff blank to solve"},
+  "📣 Voltage Gain":{f:[["Av","Gain (Av)"],["Vout","Output V"],["Vin","Input V"]],formula:"Av = Vout / Vin  |  dB = 20·log₁₀(|Av|)",desc:"Leave Av blank to solve"}
+};
+const ctSel=document.getElementById('calcType');
+for(const c in CALCS){const o=document.createElement('option');o.textContent=c;ctSel.appendChild(o);}
+function renderInputs(){
+  const cal=CALCS[ctSel.value];
+  document.getElementById('calc-inputs').innerHTML=cal.f.map(([k,l])=>`<div class="field"><label>${l}</label><input type="number" id="ci_${k}" placeholder="blank = solve"></div>`).join('');
+  document.getElementById('formula-ref').innerHTML=`<div class="formula-ttl">📐 Formula</div>${cal.formula}<br><span style="font-size:10px;color:var(--text3)">${cal.desc}</span>`;
 }
-const calcType=document.getElementById("calcType")
-const inputs=document.getElementById("inputs")
-for(let c in CALCS){let o=document.createElement("option");o.textContent=c;calcType.appendChild(o);}
-calcType.onchange=function(){inputs.innerHTML="";CALCS[calcType.value].forEach(v=>{inputs.innerHTML+=`${v}: <input id="${v}"><br>`})}
+ctSel.addEventListener('change',()=>{renderInputs();document.getElementById('result-rows').style.display='none';document.getElementById('result-placeholder').style.display='flex';});
+renderInputs();
+function gv(k){const e=document.getElementById('ci_'+k);return e?parseFloat(e.value)||0:0;}
+function fmt(n,d=4){return isNaN(n)||!isFinite(n)?'—':parseFloat(n.toFixed(d)).toString();}
+function showResults(rows){
+  document.getElementById('result-placeholder').style.display='none';
+  const r=document.getElementById('result-rows');r.style.display='block';
+  r.innerHTML='<div class="res-block"><div class="res-hd">📊 Computed Values</div>'+rows.map(([k,v,u])=>`<div class="res-row"><span class="res-k">${k}</span><span class="res-v">${v}<span class="res-u">${u}</span></span></div>`).join('')+'</div>';
+}
+function clearCalc(){document.querySelectorAll('#calc-inputs input').forEach(i=>i.value='');document.getElementById('result-rows').style.display='none';document.getElementById('result-placeholder').style.display='flex';toast('Calculator reset 🔄','🔄');}
 function solve(){
-let vals={};CALCS[calcType.value].forEach(v=>{vals[v]=parseFloat(document.getElementById(v)?.value)||0})
-let res=""
-if(calcType.value=="Ohm Law"){if(!vals.V)vals.V=vals.I*vals.R;if(!vals.I)vals.I=vals.V/vals.R;if(!vals.R)vals.R=vals.V/vals.I;res=`V=${vals.V} I=${vals.I} R=${vals.R}`}
-else if(calcType.value=="Power"){if(!vals.P)vals.P=vals.V*vals.I;if(!vals.V)vals.V=vals.P/vals.I;if(!vals.I)vals.I=vals.P/vals.V;res=`P=${vals.P} V=${vals.V} I=${vals.I}`}
-else if(calcType.value=="LED Resistor"){if(!vals.R)vals.R=(vals.Vs-vals.Vf)/vals.I;res=`R=${vals.R} Ω`;}
-else if(calcType.value=="Capacitor Energy"){if(!vals.E)vals.E=0.5*vals.C*vals.V*vals.V;res=`E=${vals.E} J`;}
-else if(calcType.value=="RC Time Constant"){if(!vals.Tau)vals.Tau=vals.R*vals.C;res=`Tau=${vals.Tau} s`;}
-else if(calcType.value=="Inductor Energy"){if(!vals.E)vals.E=0.5*vals.L*vals.I*vals.I;res=`E=${vals.E} J`;}
-else if(calcType.value=="Voltage Divider"){if(!vals.Vout)vals.Vout=vals.Vin*vals.R2/(vals.R1+vals.R2);res=`Vout=${vals.Vout} V`;}
-else if(calcType.value=="Duty Cycle"){if(!vals.D)vals.D=vals.Ton/vals.T;res=`D=${vals.D}`;}
-else if(calcType.value=="Efficiency"){if(!vals.Eff)vals.Eff=vals.Pout/vals.Pin*100;res=`Eff=${vals.Eff} %`;}
-else if(calcType.value=="Voltage Gain"){if(!vals.Av)vals.Av=vals.Vout/vals.Vin;res=`Av=${vals.Av}`;}
-document.getElementById("result").innerText=res
+  const t=ctSel.value;let rows=[];
+  if(t.includes("Ohm")){let V=gv('V'),I=gv('I'),R=gv('R');if(!V&&I&&R)V=I*R;else if(!I&&V&&R)I=V/R;else if(!R&&V&&I)R=V/I;rows=[['⚡ Voltage',fmt(V),'V'],['🔁 Current',fmt(I),'A'],['🔩 Resistance',fmt(R),'Ω']];}
+  else if(t.includes("Power")){let P=gv('P'),V=gv('V'),I=gv('I');if(!P)P=V*I;else if(!V)V=P/I;else if(!I)I=P/V;rows=[['🔋 Power',fmt(P),'W'],['⚡ Voltage',fmt(V),'V'],['🔁 Current',fmt(I),'A']];}
+  else if(t.includes("LED")){let Vs=gv('Vs'),Vf=gv('Vf'),I=gv('I');rows=[['💡 Resistor',fmt((Vs-Vf)/I,2),'Ω']];}
+  else if(t.includes("Capacitor")){let E=gv('E'),C=gv('C'),V=gv('V');if(!E)E=0.5*C*V*V;rows=[['🔵 Energy',fmt(E,6),'J']];}
+  else if(t.includes("RC")){let Tau=gv('Tau'),R=gv('R'),C=gv('C');if(!Tau)Tau=R*C;rows=[['⏱️ Tau',fmt(Tau,6),'s'],['⏱️ 5τ settle',fmt(Tau*5,6),'s']];}
+  else if(t.includes("Inductor")){let E=gv('E'),L=gv('L'),I=gv('I');if(!E)E=0.5*L*I*I;rows=[['🌀 Energy',fmt(E,6),'J']];}
+  else if(t.includes("Divider")){let Vin=gv('Vin'),Vout=gv('Vout'),R1=gv('R1'),R2=gv('R2');if(!Vout)Vout=Vin*R2/(R1+R2);rows=[['🔀 Vout',fmt(Vout,4),'V'],['📉 Ratio',fmt(Vout/(Vin||1)*100,1),'%']];}
+  else if(t.includes("Duty")){let D=gv('D'),Ton=gv('Ton'),T=gv('T');if(!D)D=Ton/T;rows=[['📊 Duty',fmt(D*100,2),'%'],['📊 Toff',fmt(T*(1-D),6),'s']];}
+  else if(t.includes("Efficiency")){let Eff=gv('Eff'),Pout=gv('Pout'),Pin=gv('Pin');if(!Eff)Eff=(Pout/Pin)*100;rows=[['✅ η',fmt(Eff,2),'%'],['🔥 Loss',fmt(Pin-Pout,3),'W']];}
+  else if(t.includes("Gain")){let Av=gv('Av'),Vout=gv('Vout'),Vin=gv('Vin');if(!Av)Av=Vout/Vin;rows=[['📣 Av',fmt(Av,4),''],['📣 dB',fmt(20*Math.log10(Math.abs(Av)||1),2),'dB']];}
+  if(rows.length){showResults(rows);toast('Calculated! ⚡');}
 }
 
-/* Waves */
-let run=false,phase=0
-function startWave(){run=true
-let canvas=document.getElementById("scope"),ctx=canvas.getContext("2d")
-canvas.width=canvas.clientWidth
-function draw(){if(!run)return;ctx.clearRect(0,0,canvas.width,canvas.height)
-let f=parseFloat(freq.value),a=parseFloat(amp.value),type=waveType.value,center=canvas.height/2
-ctx.beginPath()
-for(let x=0;x<canvas.width;x++){let t=(x/100)+phase,y=0
-if(type=="sine")y=a*Math.sin(2*Math.PI*f*t)
-if(type=="square")y=a*(Math.sin(2*Math.PI*f*t)>0?1:-1)
-if(type=="triangle")y=a*(2*Math.asin(Math.sin(2*Math.PI*f*t))/Math.PI)
-if(type=="saw")y=a*(2*(t*f-Math.floor(0.5+t*f)))
-if(type=="noise")y=a*(Math.random()-0.5)
-y=center-y;if(x==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}
-ctx.strokeStyle="#00ffd5";ctx.stroke();phase+=0.02;requestAnimationFrame(draw)}
-draw()
+/* ── WAVEFORM ── */
+let running=false,phase=0,raf=null;
+function applyPreset(btn,type,freq,amp){
+  document.getElementById('waveType').value=type;
+  document.getElementById('freq').value=freq;
+  document.getElementById('amp').value=amp;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  toast('Preset applied 🎛️');
+  if(running){stopWave();setTimeout(startWave,80);}
 }
-function stopWave(){run=false}
+function startWave(){
+  if(running)return;running=true;
+  document.getElementById('scope-led').classList.add('live');
+  document.getElementById('scope-status').textContent='🟢 Live';
+  const canvas=document.getElementById('scope'),ctx=canvas.getContext('2d');
+  let ro=new ResizeObserver(()=>{canvas.width=canvas.clientWidth*devicePixelRatio;canvas.height=canvas.clientHeight*devicePixelRatio;});
+  ro.observe(canvas);canvas.width=canvas.clientWidth*devicePixelRatio;canvas.height=canvas.clientHeight*devicePixelRatio;
+  function draw(){
+    if(!running){ro.disconnect();return;}
+    const W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(35,38,47,.9)';ctx.lineWidth=1;
+    for(let i=0;i<=10;i++){ctx.beginPath();ctx.moveTo(i*W/10,0);ctx.lineTo(i*W/10,H);ctx.stroke();}
+    for(let j=0;j<=6;j++){ctx.beginPath();ctx.moveTo(0,j*H/6);ctx.lineTo(W,j*H/6);ctx.stroke();}
+    ctx.strokeStyle='rgba(46,50,64,.7)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+    const f=parseFloat(document.getElementById('freq').value);
+    const a=parseFloat(document.getElementById('amp').value)*(H/380);
+    const type=document.getElementById('waveType').value;
+    document.getElementById('scope-freq-label').textContent=f+'Hz · '+type;
+    ctx.beginPath();ctx.strokeStyle='#34d399';ctx.lineWidth=2;
+    for(let x=0;x<W;x++){
+      const t=(x/(W/10))+phase;let y=0;
+      if(type==='sine')y=a*Math.sin(2*Math.PI*f*t);
+      if(type==='square')y=a*(Math.sin(2*Math.PI*f*t)>0?1:-1);
+      if(type==='triangle')y=a*(2*Math.asin(Math.sin(2*Math.PI*f*t))/Math.PI);
+      if(type==='saw')y=a*(2*(t*f-Math.floor(.5+t*f)));
+      if(type==='noise')y=a*(Math.random()-.5);
+      x===0?ctx.moveTo(x,H/2-y):ctx.lineTo(x,H/2-y);
+    }
+    ctx.stroke();phase+=0.04;raf=requestAnimationFrame(draw);
+  }
+  draw();toast('🌊 Waveform running!');
+}
+function stopWave(){
+  running=false;if(raf)cancelAnimationFrame(raf);
+  document.getElementById('scope-led').classList.remove('live');
+  document.getElementById('scope-status').textContent='⏸️ Idle';
+  document.getElementById('scope-freq-label').textContent='';
+  toast('⏸️ Waveform stopped.');
+}
 
+/* ── PIN REFERENCE ── */
+const BOARDS={
+  "uno":{count:14,analog:[14,15,16,17,18,19],power:[],specs:"🔌 14 digital I/O\n📊 6 analog inputs (A0–A5)\n⚡ 5V logic / 3.3V out\n🔁 6 PWM pins (3,5,6,9,10,11)\n💾 Flash: 32KB · SRAM: 2KB\n🔗 UART, SPI, I2C"},
+  "nano":{count:14,analog:[14,15,16,17,18,19,20,21],power:[],specs:"🔌 14 digital I/O\n📊 8 analog inputs (A0–A7)\n⚡ 5V logic / 3.3V out\n🔁 6 PWM pins\n💾 Flash: 32KB · SRAM: 2KB\n🔗 UART, SPI, I2C"},
+  "mega":{count:54,analog:[54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69],power:[],specs:"🔌 54 digital I/O\n📊 16 analog inputs\n⚡ 5V logic\n🔁 15 PWM pins\n💾 Flash: 256KB · SRAM: 8KB\n🔗 4× UART, SPI, I2C"},
+  "esp32":{count:36,analog:[32,33,34,35,36,39],power:[0,1],specs:"🔌 36 GPIO pins\n📊 18 analog inputs\n⚡ 3.3V only ⚠️\n📶 WiFi 802.11b/g/n\n📡 Bluetooth 4.2 + BLE\n💾 Flash: 4MB+ · SRAM: 520KB\n🔗 UART, SPI, I2C, CAN, I2S"},
+  "esp8266":{count:16,analog:[17],power:[0],specs:"🔌 16 digital GPIO\n📊 1 analog input (A0, 0–1V)\n⚡ 3.3V only ⚠️\n📶 WiFi 802.11b/g/n\n💾 Flash: 1–16MB · SRAM: 80KB\n🔗 UART, SPI, I2C"},
+  "pico":{count:26,analog:[26,27,28],power:[],specs:"🔌 26 GPIO pins\n📊 3 analog inputs (ADC0–2)\n⚡ 3.3V logic\n🔁 16 PWM channels\n💾 Flash: 2MB · SRAM: 264KB\n🔗 UART, SPI, I2C, PIO"}
+};
+function renderPinRef(){
+  const board=document.getElementById('pinout-board').value;
+  const info=BOARDS[board];
+  const used=new Set(mods.map(m=>parseInt(m.p.replace('Pin ',''))));
+  const g=document.getElementById('pin-ref-grid');g.innerHTML='';
+  for(let i=0;i<info.count;i++){
+    const c=document.createElement('div');
+    const m=mods.find(x=>parseInt(x.p.replace('Pin ',''))===i);
+    const isAnalog=info.analog.includes(i);
+    const isPower=info.power.includes(i);
+    c.className='pin-cell'+(m?' used':isPower?' power':isAnalog?' power':'');
+    c.innerHTML=`<span class="pin-num">${i}</span><span class="pin-lbl">${m?m.e+' '+m.c.slice(0,6):isPower?'PWR':isAnalog?'A/D':'DIO'}</span>`;
+    g.appendChild(c);
+  }
+  document.getElementById('board-specs').textContent=info.specs;
+}
+renderPinRef();
+
+/* ── UNIT CONVERTER ── */
+const CONV={
+  resistance:{label:'Resistance',tip:'💡 Tip: 1kΩ = 1000Ω, 1MΩ = 1,000,000Ω\nCommon: 10kΩ pull-up, 330Ω LED resistor',units:['MΩ','kΩ','Ω','mΩ','μΩ'],f:[1e6,1e3,1,1e-3,1e-6]},
+  capacitance:{label:'Capacitance',tip:'💡 Tip: Bypass caps: 100nF, Bulk: 10–100μF\n1μF = 1000nF = 1,000,000pF',units:['F','mF','μF','nF','pF'],f:[1,1e-3,1e-6,1e-9,1e-12]},
+  frequency:{label:'Frequency',tip:'💡 Tip: Arduino clock = 16MHz\nESP32 = 240MHz, Common PWM = 1–20kHz',units:['GHz','MHz','kHz','Hz','mHz'],f:[1e9,1e6,1e3,1,1e-3]},
+  voltage:{label:'Voltage',tip:'💡 Tip: TTL logic = 5V, CMOS/ESP = 3.3V\nLiPo = 3.7V nom, 4.2V full',units:['kV','V','mV','μV'],f:[1e3,1,1e-3,1e-6]},
+  current:{label:'Current',tip:'💡 Tip: LED ≈ 20mA, MCU GPIO ≈ 40mA max\nArduino USB = 500mA total',units:['A','mA','μA','nA'],f:[1,1e-3,1e-6,1e-9]},
+  power:{label:'Power',tip:'💡 Tip: P = V × I\nUSB 2.0 = 2.5W, USB-C PD = up to 100W',units:['kW','W','mW','μW'],f:[1e3,1,1e-3,1e-6]},
+  inductance:{label:'Inductance',tip:'💡 Tip: Power inductor: 1–100μH\nFilter choke: 1–10mH',units:['H','mH','μH','nH'],f:[1,1e-3,1e-6,1e-9]},
+  time:{label:'Time',tip:'💡 Tip: delay(1) = 1ms, delayMicroseconds(1) = 1μs\n1 clock at 16MHz = 62.5ns',units:['s','ms','μs','ns','ps'],f:[1,1e-3,1e-6,1e-9,1e-12]}
+};
+function renderConverter(){
+  const type=document.getElementById('conv-type').value,data=CONV[type];
+  fill(document.getElementById('conv-from'),data.units);
+  document.getElementById('conv-from-label').textContent='🔢 '+data.label+' value';
+  document.getElementById('conv-tip').textContent=data.tip;
+  doConvert();
+}
+function doConvert(){
+  const type=document.getElementById('conv-type').value,data=CONV[type];
+  const val=parseFloat(document.getElementById('conv-val').value);
+  const fromIdx=document.getElementById('conv-from').selectedIndex;
+  const r=document.getElementById('conv-results');
+  if(isNaN(val)){r.innerHTML='<div class="res-empty"><div style="font-size:32px">🔄</div><div style="font-size:12px;color:var(--text3);font-family:var(--mono)">Enter a value to convert</div></div>';return;}
+  const base=val*data.f[fromIdx];
+  r.innerHTML='<div class="res-block"><div class="res-hd">📊 All Units</div>'+
+    data.units.map((u,i)=>{
+      const cv=base/data.f[i];
+      const disp=Math.abs(cv)>=1e6||Math.abs(cv)<1e-6?cv.toExponential(3):parseFloat(cv.toPrecision(6)).toString();
+      return `<div class="conv-row${i===fromIdx?' active-row':''}"><span class="conv-k">${u}</span><span class="conv-v">${disp}</span></div>`;
+    }).join('')+'</div>';
+}
+document.getElementById('conv-type').addEventListener('change',renderConverter);
+document.getElementById('conv-from').addEventListener('change',doConvert);
+renderConverter();
 </script>
 </body>
 </html>
